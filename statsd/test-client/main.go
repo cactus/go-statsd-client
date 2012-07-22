@@ -43,10 +43,10 @@ func main() {
 		log.Fatal("Unsupported state type")
 	}
 
-	pertick := *volume / int(duration.Seconds())
-	// add an extra second, because the first tick takes a while
+	pertick := *volume / int(duration.Seconds()) / 10
+	// add some extra tiem, because the first tick takes a while
 	ender := time.After(*duration + 100 * time.Millisecond)
-	c := time.Tick(time.Second)
+	c := time.Tick(time.Second/10)
 	count := 0
 	for {
 		select {
