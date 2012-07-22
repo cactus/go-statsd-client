@@ -15,8 +15,8 @@ type StatsdClient struct {
 }
 
 
-// Increments a statsd count type
-// stat is a string name for the metric
+// Increments a statsd count type.
+// stat is a string name for the metric.
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0)
 func (s *StatsdClient) Inc(stat string, value int64, rate float32) error {
@@ -24,27 +24,27 @@ func (s *StatsdClient) Inc(stat string, value int64, rate float32) error {
 	return s.submit(stat, dap, rate)
 }
 
-// Decrements a statsd count type
-// stat is a string name for the metric
-// value is the integer value
-// rate is the sample rate (0.0 to 1.0)
+// Decrements a statsd count type.
+// stat is a string name for the metric.
+// value is the integer value.
+// rate is the sample rate (0.0 to 1.0).
 func (s *StatsdClient) Dec(stat string, value int64, rate float32) error {
 	return s.Inc(stat, -value, rate)
 }
 
-// Submits/Updates a statsd guage type
-// stat is a string name for the metric
-// value is the integer value
-// rate is the sample rate (0.0 to 1.0)
+// Submits/Updates a statsd guage type.
+// stat is a string name for the metric.
+// value is the integer value.
+// rate is the sample rate (0.0 to 1.0).
 func (s *StatsdClient) Guage(stat string, value int64, rate float32) error {
 	dap := fmt.Sprintf("%d|g", value)
 	return s.submit(stat, dap, rate)
 }
 
-// Submits a statsd timing type
-// stat is a string name for the metric
-// value is the integer value
-// rate is the sample rate (0.0 to 1.0)
+// Submits a statsd timing type.
+// stat is a string name for the metric.
+// value is the integer value.
+// rate is the sample rate (0.0 to 1.0).
 func (s *StatsdClient) Timing(stat string, delta int64, rate float32) error {
 	dap := fmt.Sprintf("%d|ms", delta)
 	return s.submit(stat, dap, rate)
@@ -88,7 +88,7 @@ func (s *StatsdClient) send(data []byte) (int, error) {
 	return i, err
 }
 
-// Returns a pointer to a new StatsdClient
+// Returns a pointer to a new StatsdClient.
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
 // prefix is the statsd client prefix. Can be "" if no prefix is desired.
