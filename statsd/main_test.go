@@ -26,7 +26,7 @@ func (f *fakeUDPConn) Write(b []byte) (int, error) {
 
 func TestGuage(t *testing.T) {
 	u := &fakeUDPConn{}
-	f := &StatsdClient{conn: u, prefix: "test"}
+	f := &Client{conn: u, prefix: "test"}
 
 	err := f.Guage("guage", 1, 1.0)
 	if err != nil {
@@ -42,7 +42,7 @@ func TestGuage(t *testing.T) {
 
 func TestIncRatio(t *testing.T) {
 	u := &fakeUDPConn{}
-	f := &StatsdClient{conn: u, prefix: "test"}
+	f := &Client{conn: u, prefix: "test"}
 
 	err := f.Inc("count", 1, 0.999999)
 	if err != nil {
@@ -58,7 +58,7 @@ func TestIncRatio(t *testing.T) {
 
 func TestInc(t *testing.T) {
 	u := &fakeUDPConn{}
-	f := &StatsdClient{conn: u, prefix: "test"}
+	f := &Client{conn: u, prefix: "test"}
 
 	err := f.Inc("count", 1, 1.0)
 	if err != nil {
@@ -74,7 +74,7 @@ func TestInc(t *testing.T) {
 
 func TestDec(t *testing.T) {
 	u := &fakeUDPConn{}
-	f := &StatsdClient{conn: u, prefix: "test"}
+	f := &Client{conn: u, prefix: "test"}
 
 	err := f.Dec("count", 1, 1.0)
 	if err != nil {
@@ -90,7 +90,7 @@ func TestDec(t *testing.T) {
 
 func TestTiming(t *testing.T) {
 	u := &fakeUDPConn{}
-	f := &StatsdClient{conn: u, prefix: "test"}
+	f := &Client{conn: u, prefix: "test"}
 
 	err := f.Timing("timing", 1, 1.0)
 	if err != nil {
@@ -106,7 +106,7 @@ func TestTiming(t *testing.T) {
 
 func TestEmptyPrefix(t *testing.T) {
 	u := &fakeUDPConn{}
-	f := &StatsdClient{conn: u}
+	f := &Client{conn: u}
 
 	err := f.Inc("count", 1, 1.0)
 	if err != nil {
