@@ -45,8 +45,9 @@ func main() {
 
 	pertick := *volume / int(duration.Seconds())
 	// add an extra second, because the first tick takes a while
-	ender := time.After(*duration + time.Second)
+	ender := time.After(*duration + 100 * time.Millisecond)
 	c := time.Tick(time.Second)
+	count := 0
 	for {
 		select {
 		case <-c:
@@ -56,8 +57,10 @@ func main() {
 					log.Printf("Got Error: %+v", err)
 					break
 				}
+				count += 1
 			}
 		case <-ender:
+			log.Printf("%d events called", count)
 			return
 		}
 	}
