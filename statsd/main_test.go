@@ -3,37 +3,28 @@ package statsd
 import (
 	"testing"
 	"bytes"
-	"net"
+	"bufio"
 	//"fmt"
 )
 
-type fakeUDPConn struct {
-	*net.UDPConn
-	buf bytes.Buffer
-}
-
-func (f *fakeUDPConn) GetBuff() string {
-	res := f.buf.String()
-	f.buf.Reset()
-	return res
-}
-
-func (f *fakeUDPConn) Write(b []byte) (int, error) {
-	i, err := f.buf.Write(b)
-	return i, err
+func NewTestClient(prefix string) (*Client, *bytes.Buffer) {
+	b := &bytes.Buffer{}
+	buf := bufio.NewReadWriter(bufio.NewReader(b), bufio.NewWriter(b))
+	f := &Client{buf: buf, prefix: prefix}
+	return f, b
 }
 
 
 func TestGuage(t *testing.T) {
-	u := &fakeUDPConn{}
-	f := &Client{conn: u, prefix: "test"}
+	f, buf := NewTestClient("test")
 
 	err := f.Guage("guage", 1, 1.0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b := u.GetBuff()
+	b := buf.String()
+	buf.Reset()
 	expected := "test.guage:1|g"
 	if b != expected {
 		t.Fatalf("got '%s' expected '%s'", b, expected)
@@ -41,15 +32,15 @@ func TestGuage(t *testing.T) {
 }
 
 func TestIncRatio(t *testing.T) {
-	u := &fakeUDPConn{}
-	f := &Client{conn: u, prefix: "test"}
+	f, buf := NewTestClient("test")
 
 	err := f.Inc("count", 1, 0.999999)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b := u.GetBuff()
+	b := buf.String()
+	buf.Reset()
 	expected := "test.count:1|c|@0.999999"
 	if b != expected {
 		t.Fatalf("got '%s' expected '%s'", b, expected)
@@ -57,15 +48,15 @@ func TestIncRatio(t *testing.T) {
 }
 
 func TestInc(t *testing.T) {
-	u := &fakeUDPConn{}
-	f := &Client{conn: u, prefix: "test"}
+	f, buf := NewTestClient("test")
 
 	err := f.Inc("count", 1, 1.0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b := u.GetBuff()
+	b := buf.String()
+	buf.Reset()
 	expected := "test.count:1|c"
 	if b != expected {
 		t.Fatalf("got '%s' expected '%s'", b, expected)
@@ -73,15 +64,15 @@ func TestInc(t *testing.T) {
 }
 
 func TestDec(t *testing.T) {
-	u := &fakeUDPConn{}
-	f := &Client{conn: u, prefix: "test"}
+	f, buf := NewTestClient("test")
 
 	err := f.Dec("count", 1, 1.0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b := u.GetBuff()
+	b := buf.String()
+	buf.Reset()
 	expected := "test.count:-1|c"
 	if b != expected {
 		t.Fatalf("got '%s' expected '%s'", b, expected)
@@ -89,15 +80,15 @@ func TestDec(t *testing.T) {
 }
 
 func TestTiming(t *testing.T) {
-	u := &fakeUDPConn{}
-	f := &Client{conn: u, prefix: "test"}
+	f, buf := NewTestClient("test")
 
 	err := f.Timing("timing", 1, 1.0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b := u.GetBuff()
+	b := buf.String()
+	buf.Reset()
 	expected := "test.timing:1|ms"
 	if b != expected {
 		t.Fatalf("got '%s' expected '%s'", b, expected)
@@ -105,15 +96,15 @@ func TestTiming(t *testing.T) {
 }
 
 func TestEmptyPrefix(t *testing.T) {
-	u := &fakeUDPConn{}
-	f := &Client{conn: u}
+	f, buf := NewTestClient("")
 
 	err := f.Inc("count", 1, 1.0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	b := u.GetBuff()
+	b := buf.String()
+	buf.Reset()
 	expected := "count:1|c"
 	if b != expected {
 		t.Fatalf("got '%s' expected '%s'", b, expected)

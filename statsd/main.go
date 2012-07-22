@@ -1,19 +1,31 @@
 package statsd
 
 import (
+	"bufio"
 	"net"
 	"math/rand"
 	"fmt"
 	"errors"
+	"time"
 )
 
 type Client struct {
-	// connection of type interface net.Conn
-	conn net.Conn
+	// connection buffer
+	buf *bufio.ReadWriter
+	// underlying connection
+	conn *net.Conn
 	// prefix for statsd name
 	prefix string
 }
 
+// Close closes the connection and cleans up.
+func (s *Client) Close() error {
+	// flush any outstanding data
+	s.buf.Flush()
+	s.buf = nil
+	err := (*s.conn).Close()
+	return err
+}
 
 // Increments a statsd count type.
 // stat is a string name for the metric.
@@ -72,40 +84,64 @@ func (s *Client) submit(stat string, value string, rate float32) error {
 
 	data := fmt.Sprintf("%s:%s", stat, value)
 
-	i, err := s.send([]byte(data))
+	_, err := s.send([]byte(data))
 	if err != nil {
 		return err
-	}
-	if i == 0 {
-		return errors.New("Wrote no bytes")
 	}
 	return nil
 }
 
 // sends the data to the server endpoint over the net.Conn
 func (s *Client) send(data []byte) (int, error) {
-	i, err := s.conn.Write([]byte(data))
-	return i, err
+	n, err := s.buf.Write([]byte(data))
+	if err != nil {
+		return 0, err
+	}
+	if n == 0 {
+		return n, errors.New("Wrote no bytes")
+	}
+	err = s.buf.Flush()
+	if err != nil {
+		return n, err
+	}
+	return n, nil
+}
+
+func newClient(conn *net.Conn, prefix string) *Client {
+	buf := bufio.NewReadWriter(bufio.NewReader(*conn), bufio.NewWriter(*conn))
+	client := &Client{
+		buf: buf,
+		conn: conn,
+		prefix: prefix}
+	return client
 }
 
 // Returns a pointer to a new Client.
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
 // prefix is the statsd client prefix. Can be "" if no prefix is desired.
-func New(addr string, prefix string) (*Client, error) {
-	udpaddr, err := net.ResolveUDPAddr("udp", addr)
+func Dial(addr string, prefix string) (*Client, error) {
+	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := net.DialUDP(udpaddr.Network(), nil, udpaddr)
+	client := newClient(&conn, prefix)
+	return client, nil
+}
+
+// Returns a pointer to a new Client.
+// addr is a string of the format "hostname:port", and must be parsable by
+// net.ResolveUDPAddr.
+// timeout is the connection timeout. Since statsd is UDP, there is no
+// connection, but the timeout applies to name resolution (if relevant).
+// prefix is the statsd client prefix. Can be "" if no prefix is desired.
+func DialTimeout(addr string, timeout time.Duration, prefix string) (*Client, error) {
+	conn, err := net.DialTimeout("udp", addr, timeout)
 	if err != nil {
 		return nil, err
 	}
 
-	client := &Client{
-		conn: conn,
-		prefix: prefix}
-
+	client := newClient(&conn, prefix)
 	return client, nil
 }
