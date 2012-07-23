@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"fmt"
 	"errors"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,9 @@ type Client struct {
 	conn *net.Conn
 	// prefix for statsd name
 	prefix string
+	// write mutex
+	mutex sync.Mutex
+
 }
 
 // Close closes the connection and cleans up.
@@ -93,6 +97,8 @@ func (s *Client) submit(stat string, value string, rate float32) error {
 
 // sends the data to the server endpoint over the net.Conn
 func (s *Client) send(data []byte) (int, error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 	n, err := s.buf.Write([]byte(data))
 	if err != nil {
 		return 0, err
