@@ -16,6 +16,6 @@ license](http://www.opensource.org/licenses/mit-license.php). See `LICENSE.md`
 file for details.
 
 [1]: https://github.com/etsy/statsd
-[2]: http://go.pkgdoc.org/github.com/cactus/go-statsd-client
+[2]: http://go.pkgdoc.org/github.com/cactus/go-statsd-client/statsd
 
 
