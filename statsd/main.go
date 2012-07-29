@@ -2,10 +2,10 @@ package statsd
 
 import (
 	"bufio"
-	"net"
-	"math/rand"
-	"fmt"
 	"errors"
+	"fmt"
+	"math/rand"
+	"net"
 	"sync"
 	"time"
 )
@@ -19,7 +19,6 @@ type Client struct {
 	prefix string
 	// write mutex
 	mutex sync.Mutex
-
 }
 
 // Close closes the connection and cleans up.
@@ -116,8 +115,8 @@ func (s *Client) send(data []byte) (int, error) {
 func newClient(conn *net.Conn, prefix string) *Client {
 	buf := bufio.NewReadWriter(bufio.NewReader(*conn), bufio.NewWriter(*conn))
 	client := &Client{
-		buf: buf,
-		conn: conn,
+		buf:    buf,
+		conn:   conn,
 		prefix: prefix}
 	return client
 }
