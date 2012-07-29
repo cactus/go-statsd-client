@@ -1,9 +1,9 @@
 package statsd
 
 import (
-	"testing"
-	"bytes"
 	"bufio"
+	"bytes"
+	"testing"
 	//"fmt"
 )
 
@@ -13,7 +13,6 @@ func NewTestClient(prefix string) (*Client, *bytes.Buffer) {
 	f := &Client{buf: buf, prefix: prefix}
 	return f, b
 }
-
 
 func TestGuage(t *testing.T) {
 	f, buf := NewTestClient("test")
