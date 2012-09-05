@@ -13,7 +13,7 @@ func main() {
 	prefix := flag.String("prefix", "test-client", "Statsd prefix")
 	name := flag.String("name", "counter", "stat name")
 	rate := flag.Float64("rate", 1.0, "Sample rate")
-	statType := flag.String("type", "count", "Stat type to send. Can be timing, count, guage")
+	statType := flag.String("type", "count", "Stat type to send. Can be timing, count, gauge")
 	statValue := flag.Int64("value", 1, "Value to send")
 	volume := flag.Int("volume", 1000, "Number of stats to send")
 	duration := flag.Duration("duration", 10*time.Second, "How long to spread the volume across. Each second of duration volume/seconds events will be sent.")
@@ -31,9 +31,9 @@ func main() {
 		stat = func(stat string, value int64, rate float32) error {
 			return client.Inc(stat, value, rate)
 		}
-	case "guage":
+	case "gauge":
 		stat = func(stat string, value int64, rate float32) error {
-			return client.Guage(stat, value, rate)
+			return client.Gauge(stat, value, rate)
 		}
 	case "timing":
 		stat = func(stat string, value int64, rate float32) error {

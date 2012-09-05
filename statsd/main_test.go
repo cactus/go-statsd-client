@@ -14,17 +14,17 @@ func NewTestClient(prefix string) (*Client, *bytes.Buffer) {
 	return f, b
 }
 
-func TestGuage(t *testing.T) {
+func TestGauge(t *testing.T) {
 	f, buf := NewTestClient("test")
 
-	err := f.Guage("guage", 1, 1.0)
+	err := f.Gauge("gauge", 1, 1.0)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	b := buf.String()
 	buf.Reset()
-	expected := "test.guage:1|g"
+	expected := "test.gauge:1|g"
 	if b != expected {
 		t.Fatalf("got '%s' expected '%s'", b, expected)
 	}

@@ -47,11 +47,11 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 	return s.Inc(stat, -value, rate)
 }
 
-// Submits/Updates a statsd guage type.
+// Submits/Updates a statsd gauge type.
 // stat is a string name for the metric.
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) Guage(stat string, value int64, rate float32) error {
+func (s *Client) Gauge(stat string, value int64, rate float32) error {
 	dap := fmt.Sprintf("%d|g", value)
 	return s.submit(stat, dap, rate)
 }
