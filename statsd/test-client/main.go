@@ -1,32 +1,46 @@
 package main
 
 import (
-	"flag"
-	"time"
-	"log"
 	"github.com/cactus/go-statsd-client/statsd"
+	flags "github.com/jessevdk/go-flags"
+	"log"
+	"os"
+	"time"
 )
 
 func main() {
 
-	address := flag.String("address", "127.0.0.1:8125", "Address:port of statsd")
-	prefix := flag.String("prefix", "test-client", "Statsd prefix")
-	name := flag.String("name", "counter", "stat name")
-	rate := flag.Float64("rate", 1.0, "Sample rate")
-	statType := flag.String("type", "count", "Stat type to send. Can be timing, count, gauge")
-	statValue := flag.Int64("value", 1, "Value to send")
-	volume := flag.Int("volume", 1000, "Number of stats to send")
-	duration := flag.Duration("duration", 10*time.Second, "How long to spread the volume across. Each second of duration volume/seconds events will be sent.")
-	flag.Parse()
+	// command line flags
+	var opts struct {
+		HostPort  string        `long:"host" default:"127.0.0.1:8125" description:"host:port of statsd server"`
+		Prefix    string        `long:"prefix" default:"test-client" description:"Statsd prefix"`
+		StatType  string        `long:"type" default:"count" description:"stat type to send. Can be timing, count, guage"`
+		StatValue int64         `long:"value" default:"1" description:"Value to send"`
+		Name      string        `short:"n" long:"name" default:"counter" description:"stat name"`
+		Rate      float32       `short:"r" long:"rate" default:"1.0" description:"sample rate"`
+		Volume    int           `short:"c" long:"count" default:"1000" description:"Number of stats to send. Volume."`
+		Duration  time.Duration `short:"d" long:"duration" default:"10s" description:"How long to spread the volume across. Each second of duration volume/seconds events will be sent."`
+	}
 
-	client, err := statsd.Dial(*address, *prefix)
+	// parse said flags
+	_, err := flags.Parse(&opts)
+	if err != nil {
+		if e, ok := err.(*flags.Error); ok {
+			if e.Type == flags.ErrHelp {
+				os.Exit(0)
+			}
+		}
+		os.Exit(1)
+	}
+
+	client, err := statsd.Dial(opts.HostPort, opts.Prefix)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer client.Close()
 
 	var stat func(stat string, value int64, rate float32) error
-	switch *statType {
+	switch opts.StatType {
 	case "count":
 		stat = func(stat string, value int64, rate float32) error {
 			return client.Inc(stat, value, rate)
@@ -43,16 +57,16 @@ func main() {
 		log.Fatal("Unsupported state type")
 	}
 
-	pertick := *volume / int(duration.Seconds()) / 10
+	pertick := opts.Volume / int(opts.Duration.Seconds()) / 10
 	// add some extra tiem, because the first tick takes a while
-	ender := time.After(*duration + 100 * time.Millisecond)
-	c := time.Tick(time.Second/10)
+	ender := time.After(opts.Duration + 100*time.Millisecond)
+	c := time.Tick(time.Second / 10)
 	count := 0
 	for {
 		select {
 		case <-c:
 			for x := 0; x < pertick; x++ {
-				err := stat(*name, *statValue, float32(*rate))
+				err := stat(opts.Name, opts.StatValue, opts.Rate)
 				if err != nil {
 					log.Printf("Got Error: %+v", err)
 					break
