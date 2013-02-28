@@ -3,6 +3,7 @@ package statsd
 import (
 	"bufio"
 	"bytes"
+	"log"
 	"testing"
 	//"fmt"
 )
@@ -112,7 +113,7 @@ func TestEmptyPrefix(t *testing.T) {
 
 func ExampleClient() {
 	// first create a client
-	client, err := statsd.Dial("127.0.0.1:8125", "test-client")
+	client, err := Dial("127.0.0.1:8125", "test-client")
 	// handle any errors
 	if err != nil {
 		log.Fatal(err)
