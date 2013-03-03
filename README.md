@@ -5,6 +5,8 @@ go-statsd-client
 
 A [StatsD][1] client for Go.
 
+[![Build Status](https://travis-ci.org/cactus/go-statsd-client.png?branch=master)](https://travis-ci.org/cactus/go-statsd-client)
+
 ## Docs
 
 Viewable online at [go.pkgdoc.org][2].
