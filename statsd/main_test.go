@@ -1,114 +1,77 @@
 package statsd
 
 import (
-	"bufio"
 	"bytes"
 	"log"
+	"time"
 	"testing"
-	//"fmt"
+	"net"
+	"reflect"
 )
 
-func NewTestClient(prefix string) (*Client, *bytes.Buffer) {
-	b := &bytes.Buffer{}
-	buf := bufio.NewReadWriter(bufio.NewReader(b), bufio.NewWriter(b))
-	f := &Client{buf: buf, prefix: prefix}
-	return f, b
+
+var statsdPacketTests = []struct {
+	Prefix string
+	Method string
+	Stat string
+	Value int64
+	Rate float32
+	Expected string
+}{
+	{"test", "Gauge", "gauge", 1, 1.0, "test.gauge:1|g"},
+	{"test", "Inc", "count", 1, 0.999999, "test.count:1|c|@0.999999"},
+	{"test", "Inc", "count", 1, 1.0, "test.count:1|c"},
+	{"test", "Dec", "count", 1, 1.0, "test.count:-1|c"},
+	{"test", "Timing", "timing", 1, 1.0, "test.timing:1|ms"},
+	{"", "Inc", "count", 1, 1.0, "count:1|c"},
 }
 
-func TestGauge(t *testing.T) {
-	f, buf := NewTestClient("test")
-
-	err := f.Gauge("gauge", 1, 1.0)
+func TestClient(t *testing.T) {
+	l, err := newUDPListener("127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer l.Close()
+	for _, tt := range statsdPacketTests {
+		c, err := New(l.LocalAddr().String(), tt.Prefix)
+		if err != nil {
+			t.Fatal(err)
+		}
+		method := reflect.ValueOf(c).MethodByName(tt.Method)
+		e := method.Call([]reflect.Value{
+			reflect.ValueOf(tt.Stat),
+			reflect.ValueOf(tt.Value),
+			reflect.ValueOf(tt.Rate)})[0]
+		errInter := e.Interface()
+		if errInter != nil {
+			t.Fatal(errInter.(error))
+		}
 
-	b := buf.String()
-	buf.Reset()
-	expected := "test.gauge:1|g"
-	if b != expected {
-		t.Fatalf("got '%s' expected '%s'", b, expected)
+		data := make([]byte, 128)
+		_, _, err = l.ReadFrom(data)
+		if err != nil {
+			c.Close()
+			t.Fatal(err)
+		}
+
+		data = bytes.TrimRight(data, "\x00")
+		if bytes.Equal(data, []byte(tt.Expected)) != true {
+			c.Close()
+			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
+		}
+		c.Close()
 	}
 }
 
-func TestIncRatio(t *testing.T) {
-	f, buf := NewTestClient("test")
-
-	err := f.Inc("count", 1, 0.999999)
-	if err != nil {
-		t.Fatal(err)
+func newUDPListener(addr string) (*net.UDPConn, error) {
+	l, err := net.ListenPacket("udp", addr)
+	if err !=  nil {
+		return nil, err
 	}
-
-	b := buf.String()
-	buf.Reset()
-	expected := "test.count:1|c|@0.999999"
-	if b != expected {
-		t.Fatalf("got '%s' expected '%s'", b, expected)
-	}
-}
-
-func TestInc(t *testing.T) {
-	f, buf := NewTestClient("test")
-
-	err := f.Inc("count", 1, 1.0)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	b := buf.String()
-	buf.Reset()
-	expected := "test.count:1|c"
-	if b != expected {
-		t.Fatalf("got '%s' expected '%s'", b, expected)
-	}
-}
-
-func TestDec(t *testing.T) {
-	f, buf := NewTestClient("test")
-
-	err := f.Dec("count", 1, 1.0)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	b := buf.String()
-	buf.Reset()
-	expected := "test.count:-1|c"
-	if b != expected {
-		t.Fatalf("got '%s' expected '%s'", b, expected)
-	}
-}
-
-func TestTiming(t *testing.T) {
-	f, buf := NewTestClient("test")
-
-	err := f.Timing("timing", 1, 1.0)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	b := buf.String()
-	buf.Reset()
-	expected := "test.timing:1|ms"
-	if b != expected {
-		t.Fatalf("got '%s' expected '%s'", b, expected)
-	}
-}
-
-func TestEmptyPrefix(t *testing.T) {
-	f, buf := NewTestClient("")
-
-	err := f.Inc("count", 1, 1.0)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	b := buf.String()
-	buf.Reset()
-	expected := "count:1|c"
-	if b != expected {
-		t.Fatalf("got '%s' expected '%s'", b, expected)
-	}
+	l.SetDeadline(time.Now().Add(100 * time.Millisecond))
+	l.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+	l.SetWriteDeadline(time.Now().Add(100 * time.Millisecond))
+	return l.(*net.UDPConn), nil
 }
 
 func ExampleClient() {

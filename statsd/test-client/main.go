@@ -33,7 +33,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	client, err := statsd.Dial(opts.HostPort, opts.Prefix)
+	client, err := statsd.New(opts.HostPort, opts.Prefix)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,6 +75,7 @@ func main() {
 			}
 		case <-ender:
 			log.Printf("%d events called", count)
+			os.Exit(0)
 			return
 		}
 	}
