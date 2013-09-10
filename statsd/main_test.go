@@ -24,6 +24,8 @@ var statsdPacketTests = []struct {
 	{"test", "Dec", "count", 1, 1.0, "test.count:-1|c"},
 	{"test", "Timing", "timing", 1, 1.0, "test.timing:1|ms"},
 	{"", "Inc", "count", 1, 1.0, "count:1|c"},
+	{"", "GaugeDelta", "gauge", 1, 1.0, "gauge:+1|g"},
+	{"", "GaugeDelta", "gauge", -1, 1.0, "gauge:-1|g"},
 }
 
 func TestClient(t *testing.T) {

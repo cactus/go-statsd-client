@@ -48,6 +48,15 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 	return s.submit(stat, dap, rate)
 }
 
+// Submits a delta to a statsd gauge.
+// stat is the string name for the metric.
+// value is the (positive or negative) change.
+// rate is the sample rate (0.0 to 1.0).
+func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
+	dap := fmt.Sprintf("%+d|g", value)
+	return s.submit(stat, dap, rate)
+}
+
 // Submits a statsd timing type.
 // stat is a string name for the metric.
 // value is the integer value.
