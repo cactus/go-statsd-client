@@ -8,6 +8,8 @@ import (
 )
 
 type Client struct {
+	Noop bool
+
 	// underlying connection
 	c net.PacketConn
 	// resolved udp address
@@ -27,6 +29,10 @@ func (s *Client) Close() error {
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0)
 func (s *Client) Inc(stat string, value int64, rate float32) error {
+	if s.Noop {
+		return nil
+	}
+
 	dap := fmt.Sprintf("%d|c", value)
 	return s.submit(stat, dap, rate)
 }
@@ -44,6 +50,10 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Gauge(stat string, value int64, rate float32) error {
+	if s.Noop {
+		return nil
+	}
+
 	dap := fmt.Sprintf("%d|g", value)
 	return s.submit(stat, dap, rate)
 }
@@ -53,6 +63,10 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 // value is the (positive or negative) change.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
+	if s.Noop {
+		return nil
+	}
+
 	dap := fmt.Sprintf("%+d|g", value)
 	return s.submit(stat, dap, rate)
 }
@@ -62,6 +76,10 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Timing(stat string, delta int64, rate float32) error {
+	if s.Noop {
+		return nil
+	}
+
 	dap := fmt.Sprintf("%d|ms", delta)
 	return s.submit(stat, dap, rate)
 }
