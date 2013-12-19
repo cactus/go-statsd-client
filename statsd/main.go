@@ -9,7 +9,7 @@ import (
 
 type Client struct {
 	// underlying connection
-	c  net.PacketConn
+	c net.PacketConn
 	// resolved udp address
 	ra *net.UDPAddr
 	// prefix for statsd name
@@ -113,7 +113,7 @@ func (s *Client) send(data []byte) (int, error) {
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
 // prefix is the statsd client prefix. Can be "" if no prefix is desired.
-func New(addr, prefix string) (*Client,  error) {
+func New(addr, prefix string) (*Client, error) {
 	c, err := net.ListenPacket("udp", ":0")
 	if err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func New(addr, prefix string) (*Client,  error) {
 	}
 
 	client := &Client{
-		c:		c,
+		c:      c,
 		ra:     ra,
 		prefix: prefix}
 

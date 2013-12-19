@@ -3,19 +3,18 @@ package statsd
 import (
 	"bytes"
 	"log"
-	"time"
-	"testing"
 	"net"
 	"reflect"
+	"testing"
+	"time"
 )
 
-
 var statsdPacketTests = []struct {
-	Prefix string
-	Method string
-	Stat string
-	Value int64
-	Rate float32
+	Prefix   string
+	Method   string
+	Stat     string
+	Value    int64
+	Rate     float32
 	Expected string
 }{
 	{"test", "Gauge", "gauge", 1, 1.0, "test.gauge:1|g"},
@@ -67,7 +66,7 @@ func TestClient(t *testing.T) {
 
 func newUDPListener(addr string) (*net.UDPConn, error) {
 	l, err := net.ListenPacket("udp", addr)
-	if err !=  nil {
+	if err != nil {
 		return nil, err
 	}
 	l.SetDeadline(time.Now().Add(100 * time.Millisecond))
