@@ -64,6 +64,23 @@ func TestClient(t *testing.T) {
 	}
 }
 
+func TestNoop(t *testing.T) {
+	c, err := New("invalid-address:0", "")
+	if err == nil {
+		t.Fatal(err)
+	}
+	if c != nil {
+		t.Fatal("New() should return nil client on connection failure.")
+	}
+
+	c = new(Client)
+	c.Noop = true
+	err = c.Inc("key", 1, 1)
+	if err != nil {
+		t.Fatalf("Noop c.Inc() expected error: nil got: %v", err)
+	}
+}
+
 func newUDPListener(addr string) (*net.UDPConn, error) {
 	l, err := net.ListenPacket("udp", addr)
 	if err != nil {
