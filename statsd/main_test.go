@@ -64,6 +64,39 @@ func TestClient(t *testing.T) {
 	}
 }
 
+func TestNoopClient(t *testing.T) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	for _, tt := range statsdPacketTests {
+		c, err := NewNoop(l.LocalAddr().String(), tt.Prefix)
+		if err != nil {
+			t.Fatal(err)
+		}
+		method := reflect.ValueOf(c).MethodByName(tt.Method)
+		e := method.Call([]reflect.Value{
+			reflect.ValueOf(tt.Stat),
+			reflect.ValueOf(tt.Value),
+			reflect.ValueOf(tt.Rate)})[0]
+		errInter := e.Interface()
+		if errInter != nil {
+			t.Fatal(errInter.(error))
+		}
+
+		data := make([]byte, 128)
+		n, _, err := l.ReadFrom(data)
+		// this is expected to error, since there should
+		// be no udp data sent, so the read will time out
+		if err == nil || n != 0 {
+			c.Close()
+			t.Fatal(err)
+		}
+		c.Close()
+	}
+}
+
 func newUDPListener(addr string) (*net.UDPConn, error) {
 	l, err := net.ListenPacket("udp", addr)
 	if err != nil {
@@ -81,6 +114,31 @@ func ExampleClient() {
 	// handle any errors
 	if err != nil {
 		log.Fatal(err)
+	}
+	// make sure to clean up
+	defer client.Close()
+
+	// Send a stat
+	err = client.Inc("stat1", 42, 1.0)
+	// handle any errors
+	if err != nil {
+		log.Printf("Error sending metric: %+v", err)
+	}
+}
+
+func ExampleNoopClient() {
+	// use interface so we can sub noop client if needed
+	var client Statter
+	var err error
+
+	// first try to create a real client
+	client, err = Dial("not-resolvable:8125", "test-client")
+	// Lets say real client creation fails, but you don't care enough about
+	// stats that you don't want your program to run. Just log an error and
+	// make a NoopClient instead
+	if err != nil {
+		log.Println("Remote endpoint did not resolve. Disabling stats", err)
+		client, err = NewNoop()
 	}
 	// make sure to clean up
 	defer client.Close()

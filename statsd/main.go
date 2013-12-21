@@ -7,6 +7,17 @@ import (
 	"net"
 )
 
+type Statter interface {
+	Inc(stat string, value int64, rate float32) error
+	Dec(stat string, value int64, rate float32) error
+	Gauge(stat string, value int64, rate float32) error
+	GaugeDelta(stat string, value int64, rate float32) error
+	Timing(stat string, delta int64, rate float32) error
+	SetPrefix(prefix string)
+	Close() error
+}
+
+
 type Client struct {
 	// underlying connection
 	c net.PacketConn
@@ -132,5 +143,5 @@ func New(addr, prefix string) (*Client, error) {
 	return client, nil
 }
 
-// Compat
+// Compatibility alias
 var Dial = New

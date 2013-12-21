@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/cactus/go-statsd-client/statsd"
 	flags "github.com/jessevdk/go-flags"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -19,6 +20,7 @@ func main() {
 		Name      string        `short:"n" long:"name" default:"counter" description:"stat name"`
 		Rate      float32       `short:"r" long:"rate" default:"1.0" description:"sample rate"`
 		Volume    int           `short:"c" long:"count" default:"1000" description:"Number of stats to send. Volume."`
+		Noop      bool          `long:"noop" default:"false" description:"Use noop client"`
 		Duration  time.Duration `short:"d" long:"duration" default:"10s" description:"How long to spread the volume across. Each second of duration volume/seconds events will be sent."`
 	}
 
@@ -30,14 +32,20 @@ func main() {
 				os.Exit(0)
 			}
 		}
+		fmt.Printf("Error: %+v\n", err)
 		os.Exit(1)
 	}
 
-	client, err := statsd.New(opts.HostPort, opts.Prefix)
-	if err != nil {
-		log.Fatal(err)
+	var client statsd.Statter
+	if !opts.Noop {
+		client, err = statsd.New(opts.HostPort, opts.Prefix)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer client.Close()
+	} else {
+		client, err = statsd.NewNoop(opts.HostPort, opts.Prefix)
 	}
-	defer client.Close()
 
 	var stat func(stat string, value int64, rate float32) error
 	switch opts.StatType {
