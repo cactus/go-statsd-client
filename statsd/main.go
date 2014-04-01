@@ -13,6 +13,7 @@ type Statter interface {
 	Gauge(stat string, value int64, rate float32) error
 	GaugeDelta(stat string, value int64, rate float32) error
 	Timing(stat string, delta int64, rate float32) error
+	Raw(stat string, value string, rate float32) error
 	SetPrefix(prefix string)
 	Close() error
 }
@@ -39,7 +40,7 @@ func (s *Client) Close() error {
 // rate is the sample rate (0.0 to 1.0)
 func (s *Client) Inc(stat string, value int64, rate float32) error {
 	dap := fmt.Sprintf("%d|c", value)
-	return s.submit(stat, dap, rate)
+	return s.Raw(stat, dap, rate)
 }
 
 // Decrements a statsd count type.
@@ -56,7 +57,7 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Gauge(stat string, value int64, rate float32) error {
 	dap := fmt.Sprintf("%d|g", value)
-	return s.submit(stat, dap, rate)
+	return s.Raw(stat, dap, rate)
 }
 
 // Submits a delta to a statsd gauge.
@@ -65,7 +66,7 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 	dap := fmt.Sprintf("%+d|g", value)
-	return s.submit(stat, dap, rate)
+	return s.Raw(stat, dap, rate)
 }
 
 // Submits a statsd timing type.
@@ -74,17 +75,15 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Timing(stat string, delta int64, rate float32) error {
 	dap := fmt.Sprintf("%d|ms", delta)
-	return s.submit(stat, dap, rate)
+	return s.Raw(stat, dap, rate)
 }
 
-// Sets/Updates the statsd client prefix
-func (s *Client) SetPrefix(prefix string) {
-	s.prefix = prefix
-}
-
-// submit formats the statsd event data, handles sampling, and prepares it,
+// Raw formats the statsd event data, handles sampling, prepares it,
 // and sends it to the server.
-func (s *Client) submit(stat string, value string, rate float32) error {
+// stat is the string name for the metric.
+// value is a preformatted "raw" value string.
+// rate is the sample rate (0.0 to 1.0).
+func (s *Client) Raw(stat string, value string, rate float32) error {
 	if rate < 1 {
 		if rand.Float32() < rate {
 			value = fmt.Sprintf("%s|@%f", value, rate)
@@ -104,6 +103,11 @@ func (s *Client) submit(stat string, value string, rate float32) error {
 		return err
 	}
 	return nil
+}
+
+// Sets/Updates the statsd client prefix
+func (s *Client) SetPrefix(prefix string) {
+	s.prefix = prefix
 }
 
 // sends the data to the server endpoint

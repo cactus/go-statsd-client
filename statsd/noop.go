@@ -50,11 +50,19 @@ func (s *NoopClient) Timing(stat string, delta int64, rate float32) error {
 	return nil
 }
 
+// Raw formats the statsd event data, handles sampling, prepares it,
+// and sends it to the server.
+// stat is the string name for the metric.
+// value is the preformatted "raw" value string.
+// rate is the sample rate (0.0 to 1.0).
+func (s *NoopClient) Raw(stat string, value string, rate float32) error {
+	return nil
+}
+
 // Sets/Updates the statsd client prefix
 func (s *NoopClient) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
-
 
 // Returns a pointer to a new NoopClient, and an error (always nil, just
 // supplied to support api convention).
