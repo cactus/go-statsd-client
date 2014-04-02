@@ -2,7 +2,6 @@ go-statsd-client
 ================
 
 [![Build Status](https://travis-ci.org/cactus/go-statsd-client.png?branch=master)](https://travis-ci.org/cactus/go-statsd-client)
-
 [![GoDoc](https://godoc.org/github.com/cactus/go-statsd-client/statsd?status.png)](https://godoc.org/github.com/cactus/go-statsd-client/statsd)
 
 ## About
