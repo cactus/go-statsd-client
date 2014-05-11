@@ -18,7 +18,6 @@ type Statter interface {
 	Close() error
 }
 
-
 type Client struct {
 	// underlying connection
 	c net.PacketConn
