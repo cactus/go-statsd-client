@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cactus/go-statsd-client/statsd"
 	flags "github.com/jessevdk/go-flags"
-	"fmt"
 	"log"
 	"os"
 	"time"
