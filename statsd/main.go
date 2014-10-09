@@ -29,6 +29,9 @@ type Client struct {
 
 // Close closes the connection and cleans up.
 func (s *Client) Close() error {
+	if s == nil {
+		return nil
+	}
 	err := s.c.Close()
 	return err
 }
@@ -83,6 +86,9 @@ func (s *Client) Timing(stat string, delta int64, rate float32) error {
 // value is a preformatted "raw" value string.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Raw(stat string, value string, rate float32) error {
+	if s == nil {
+		return nil
+	}
 	if rate < 1 {
 		if rand.Float32() < rate {
 			value = fmt.Sprintf("%s|@%f", value, rate)
@@ -106,6 +112,9 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 
 // Sets/Updates the statsd client prefix
 func (s *Client) SetPrefix(prefix string) {
+	if s == nil {
+		return
+	}
 	s.prefix = prefix
 }
 
