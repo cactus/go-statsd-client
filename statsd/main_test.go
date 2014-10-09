@@ -64,6 +64,37 @@ func TestClient(t *testing.T) {
 	}
 }
 
+func TestNilClient(t *testing.T) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	for _, tt := range statsdPacketTests {
+		var c *Client
+
+		method := reflect.ValueOf(c).MethodByName(tt.Method)
+		e := method.Call([]reflect.Value{
+			reflect.ValueOf(tt.Stat),
+			reflect.ValueOf(tt.Value),
+			reflect.ValueOf(tt.Rate)})[0]
+		errInter := e.Interface()
+		if errInter != nil {
+			t.Fatal(errInter.(error))
+		}
+
+		data := make([]byte, 128)
+		n, _, err := l.ReadFrom(data)
+		// this is expected to error, since there should
+		// be no udp data sent, so the read will time out
+		if err == nil || n != 0 {
+			c.Close()
+			t.Fatal(err)
+		}
+		c.Close()
+	}
+}
+
 func TestNoopClient(t *testing.T) {
 	l, err := newUDPListener("127.0.0.1:0")
 	if err != nil {
@@ -117,6 +148,19 @@ func ExampleClient() {
 	}
 	// make sure to clean up
 	defer client.Close()
+
+	// Send a stat
+	err = client.Inc("stat1", 42, 1.0)
+	// handle any errors
+	if err != nil {
+		log.Printf("Error sending metric: %+v", err)
+	}
+}
+
+func ExampleNilClient() {
+	// use interface so we can sub noop client if needed
+	var client *Client
+	var err error
 
 	// Send a stat
 	err = client.Inc("stat1", 42, 1.0)
