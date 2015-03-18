@@ -67,11 +67,13 @@ func NewBufferedSender(addr string, flushIntervalBytes, flushIntervalMillis int)
 	return sender, nil
 }
 
-// Returns a pointer to a new Client, and an error.
-// addr is a string of the format "hostname:port", and must be parsable by
-// net.ResolveUDPAddr.
-// prefix is the statsd client prefix. Can be "" if no prefix is desired.
 func NewBufferedClient(addr, prefix string, flushIntervalBytes, flushIntervalMillis int) (*Client, error) {
+	if flushIntervalBytes <= 0 {
+		flushIntervalBytes = 1432 // https://github.com/etsy/statsd/blob/master/docs/metric_types.md#multi-metric-packets
+	}
+	if flushIntervalMillis <= 0 {
+		flushIntervalMillis = 1000
+	}
 	sender, err := NewBufferedSender(addr, flushIntervalBytes, flushIntervalMillis)
 	if err != nil {
 		return nil, err
