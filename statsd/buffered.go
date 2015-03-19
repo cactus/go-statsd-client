@@ -1,6 +1,7 @@
 package statsd
 
 import (
+	"bytes"
 	"time"
 )
 
@@ -8,7 +9,7 @@ type BufferedSender struct {
 	flushIntervalBytes  int
 	flushIntervalMillis int
 	sender              *SimpleSender
-	buffer              []byte
+	buffer              *bytes.Buffer
 	reqs                chan []byte
 	shutdown            chan bool
 }
@@ -33,8 +34,12 @@ func (s *BufferedSender) Start() {
 			s.flush()
 		case req := <-s.reqs:
 			// StatsD supports receiving multiple metrics in a single packet by separating them with a newline.
-			s.buffer = append(s.buffer, append(req, []byte("\n")...)...)
-			if len(s.buffer) >= s.flushIntervalBytes {
+			newLine := append(req, '\n')
+			if s.buffer.Len()+len(newLine) > s.flushIntervalBytes {
+				s.flush()
+			}
+			s.buffer.Write(newLine)
+			if s.buffer.Len() >= s.flushIntervalBytes {
 				s.flush()
 			}
 		case <-s.shutdown:
@@ -44,8 +49,8 @@ func (s *BufferedSender) Start() {
 }
 
 func (s *BufferedSender) flush() (int, error) {
-	n, err := s.sender.Send(s.buffer)
-	s.buffer = []byte{} // clear the buffer
+	n, err := s.sender.Send(s.buffer.Bytes())
+	s.buffer.Reset() // clear the buffer
 	return n, err
 }
 
@@ -59,6 +64,7 @@ func NewBufferedSender(addr string, flushIntervalBytes, flushIntervalMillis int)
 		flushIntervalBytes:  flushIntervalBytes,
 		flushIntervalMillis: flushIntervalMillis,
 		sender:              simpleSender,
+		buffer:              bytes.NewBuffer(make([]byte, 0, flushIntervalBytes)),
 		reqs:                make(chan []byte),
 		shutdown:            make(chan bool),
 	}
