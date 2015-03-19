@@ -31,7 +31,9 @@ func (s *BufferedSender) Start() {
 	for {
 		select {
 		case <-ticker.C:
-			s.flush()
+			if s.buffer.Len() > 0 {
+				s.flush()
+			}
 		case req := <-s.reqs:
 			// StatsD supports receiving multiple metrics in a single packet by separating them with a newline.
 			newLine := append(req, '\n')
