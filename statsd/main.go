@@ -149,7 +149,7 @@ func (s *SimpleSender) Close() error {
 	return err
 }
 
-// Returns a new SimpleSender for sending to the supplied addresss
+// Returns a new SimpleSender for sending to the supplied addresss.
 //
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
