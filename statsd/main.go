@@ -153,7 +153,7 @@ func (s *SimpleSender) Close() error {
 //
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
-func NewSimpleSender(addr string) (*SimpleSender, error) {
+func NewSimpleSender(addr string) (Sender, error) {
 	c, err := net.ListenPacket("udp", ":0")
 	if err != nil {
 		return nil, err
@@ -178,7 +178,7 @@ func NewSimpleSender(addr string) (*SimpleSender, error) {
 // net.ResolveUDPAddr.
 //
 // prefix is the statsd client prefix. Can be "" if no prefix is desired.
-func NewClient(addr, prefix string) (*Client, error) {
+func NewClient(addr, prefix string) (Statter, error) {
 	sender, err := NewSimpleSender(addr)
 	if err != nil {
 		return nil, err

@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/cactus/go-statsd-client/statsd"
-	flags "github.com/jessevdk/go-flags"
 	"log"
 	"os"
 	"time"
+
+	"github.com/cactus/go-statsd-client/statsd"
+	flags "github.com/jessevdk/go-flags"
 )
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 		Rate      float32       `short:"r" long:"rate" default:"1.0" description:"sample rate"`
 		Volume    int           `short:"c" long:"count" default:"1000" description:"Number of stats to send. Volume."`
 		Nil       bool          `long:"nil" default:"false" description:"Use nil client"`
+		Buffered  bool          `long:"buffered" default:"false" description:"Use a buffered client"`
 		Duration  time.Duration `short:"d" long:"duration" default:"10s" description:"How long to spread the volume across. Each second of duration volume/seconds events will be sent."`
 	}
 
@@ -36,9 +38,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	var client *statsd.Client
+	if opts.Nil && opts.Buffered {
+		fmt.Printf("Specifying both nil and buffered together is invalid.")
+		os.Exit(1)
+	}
+
+	var client statsd.Statter
 	if !opts.Nil {
-		client, err = statsd.New(opts.HostPort, opts.Prefix)
+		if !opts.Buffered {
+			client, err = statsd.NewClient(opts.HostPort, opts.Prefix)
+		} else {
+			client, err = statsd.NewBufferedClient(opts.HostPort, opts.Prefix, opts.Duration/time.Duration(4), 0)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}

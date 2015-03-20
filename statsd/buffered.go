@@ -10,7 +10,7 @@ import (
 type BufferedSender struct {
 	flushBytes    int
 	flushInterval time.Duration
-	sender        *SimpleSender
+	sender        Sender
 	buffer        *bytes.Buffer
 	reqs          chan []byte
 	shutdown      chan bool
@@ -76,7 +76,7 @@ func (s *BufferedSender) flush() (int, error) {
 // flushBytes specifies the maximum udp packet size you wish to send. If adding
 // a metric would result in a larger packet than flushBytes, the packet will
 // first be send, then the new data will be added to the next packet.
-func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int) (*BufferedSender, error) {
+func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int) (Sender, error) {
 	simpleSender, err := NewSimpleSender(addr)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 // If flushBytes is 0, defaults to 1432 bytes, which is considered safe
 // for local traffic. If sending over the public internet, 512 bytes is
 // the recommended value.
-func NewBufferedClient(addr, prefix string, flushInterval time.Duration, flushBytes int) (*Client, error) {
+func NewBufferedClient(addr, prefix string, flushInterval time.Duration, flushBytes int) (Statter, error) {
 	if flushBytes <= 0 {
 		// https://github.com/etsy/statsd/blob/master/docs/metric_types.md#multi-metric-packets
 		flushBytes = 1432

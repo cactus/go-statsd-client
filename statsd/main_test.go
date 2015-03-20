@@ -157,19 +157,6 @@ func ExampleClient() {
 	}
 }
 
-func ExampleClient_nil() {
-	// use interface so we can sub noop client if needed
-	var client *Client
-	var err error
-
-	// Send a stat
-	err = client.Inc("stat1", 42, 1.0)
-	// handle any errors
-	if err != nil {
-		log.Printf("Error sending metric: %+v", err)
-	}
-}
-
 func ExampleClient_noop() {
 	// use interface so we can sub noop client if needed
 	var client Statter
