@@ -18,13 +18,16 @@ type Statter interface {
 	Close() error
 }
 
+type Sender interface {
+	Send(data []byte) (int, error)
+	Close() error
+}
+
 type Client struct {
-	// underlying connection
-	c net.PacketConn
-	// resolved udp address
-	ra *net.UDPAddr
 	// prefix for statsd name
 	prefix string
+	// packet sender
+	sender Sender
 }
 
 // Close closes the connection and cleans up.
@@ -32,7 +35,7 @@ func (s *Client) Close() error {
 	if s == nil {
 		return nil
 	}
-	err := s.c.Close()
+	err := s.sender.Close()
 	return err
 }
 
@@ -103,7 +106,7 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 
 	data := fmt.Sprintf("%s:%s", stat, value)
 
-	_, err := s.send([]byte(data))
+	_, err := s.sender.Send([]byte(data))
 	if err != nil {
 		return err
 	}
@@ -118,11 +121,19 @@ func (s *Client) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
 
-// sends the data to the server endpoint
-func (s *Client) send(data []byte) (int, error) {
+// SimpleSender provides a socket send interface
+type SimpleSender struct {
+	// underlying connection
+	c net.PacketConn
+	// resolved udp address
+	ra *net.UDPAddr
+}
+
+// Send sends the data to the server endpoint
+func (s *SimpleSender) Send(data []byte) (int, error) {
 	// no need for locking here, as the underlying fdNet
 	// already serialized writes
-	n, err := s.c.(*net.UDPConn).WriteToUDP([]byte(data), s.ra)
+	n, err := s.c.(*net.UDPConn).WriteToUDP(data, s.ra)
 	if err != nil {
 		return 0, err
 	}
@@ -132,11 +143,16 @@ func (s *Client) send(data []byte) (int, error) {
 	return n, nil
 }
 
-// Returns a pointer to a new Client, and an error.
+// Closes SimpleSender
+func (s *SimpleSender) Close() error {
+	err := s.c.Close()
+	return err
+}
+
+// Returns a new SimpleSender for sending to the supplied addresss
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
-// prefix is the statsd client prefix. Can be "" if no prefix is desired.
-func New(addr, prefix string) (*Client, error) {
+func NewSimpleSender(addr string) (*SimpleSender, error) {
 	c, err := net.ListenPacket("udp", ":0")
 	if err != nil {
 		return nil, err
@@ -147,10 +163,28 @@ func New(addr, prefix string) (*Client, error) {
 		return nil, err
 	}
 
+	sender := &SimpleSender{
+		c:  c,
+		ra: ra,
+	}
+
+	return sender, nil
+}
+
+// Returns a pointer to a new Client, and an error.
+// addr is a string of the format "hostname:port", and must be parsable by
+// net.ResolveUDPAddr.
+// prefix is the statsd client prefix. Can be "" if no prefix is desired.
+func New(addr, prefix string) (*Client, error) {
+	sender, err := NewSimpleSender(addr)
+	if err != nil {
+		return nil, err
+	}
+
 	client := &Client{
-		c:      c,
-		ra:     ra,
-		prefix: prefix}
+		prefix: prefix,
+		sender: sender,
+	}
 
 	return client, nil
 }
