@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestBufferedClient(t *testing.T) {
@@ -14,7 +15,7 @@ func TestBufferedClient(t *testing.T) {
 	defer l.Close()
 
 	for _, tt := range statsdPacketTests {
-		c, err := NewBufferedClient(l.LocalAddr().String(), tt.Prefix, 100, 10)
+		c, err := NewBufferedClient(l.LocalAddr().String(), tt.Prefix, 10*time.Millisecond, 100)
 		if err != nil {
 			c.Close()
 			t.Fatal(err)
@@ -70,7 +71,7 @@ func TestBufferedClient2(t *testing.T) {
 	}
 	defer l.Close()
 
-	c, err := NewBufferedClient(l.LocalAddr().String(), "test", 1024, 10)
+	c, err := NewBufferedClient(l.LocalAddr().String(), "test", 10*time.Millisecond, 1024)
 	if err != nil {
 		t.Fatal(err)
 	}

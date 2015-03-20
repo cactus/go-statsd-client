@@ -5,28 +5,34 @@ import (
 	"time"
 )
 
+// BufferedSender provides a buffered statsd udp, sending multiple
+// metrics, where possible.
 type BufferedSender struct {
-	flushIntervalBytes  int
-	flushIntervalMillis int
-	sender              *SimpleSender
-	buffer              *bytes.Buffer
-	reqs                chan []byte
-	shutdown            chan bool
+	flushBytes    int
+	flushInterval time.Duration
+	sender        *SimpleSender
+	buffer        *bytes.Buffer
+	reqs          chan []byte
+	shutdown      chan bool
 }
 
+// Send bytes
 func (s *BufferedSender) Send(data []byte) (int, error) {
 	s.reqs <- data
 	return len(data), nil
 }
 
+// Close Buffered Sender
 func (s *BufferedSender) Close() error {
 	s.shutdown <- true
 	err := s.sender.Close()
 	return err
 }
 
+// Start Buffered Sender
+// Begins ticker and read loop
 func (s *BufferedSender) Start() {
-	ticker := time.NewTicker(time.Duration(s.flushIntervalMillis) * time.Millisecond)
+	ticker := time.NewTicker(s.flushInterval)
 
 	for {
 		select {
@@ -35,13 +41,14 @@ func (s *BufferedSender) Start() {
 				s.flush()
 			}
 		case req := <-s.reqs:
-			// StatsD supports receiving multiple metrics in a single packet by separating them with a newline.
+			// StatsD supports receiving multiple metrics in a single packet by
+			// separating them with a newline.
 			newLine := append(req, '\n')
-			if s.buffer.Len()+len(newLine) > s.flushIntervalBytes {
+			if s.buffer.Len()+len(newLine) > s.flushBytes {
 				s.flush()
 			}
 			s.buffer.Write(newLine)
-			if s.buffer.Len() >= s.flushIntervalBytes {
+			if s.buffer.Len() >= s.flushBytes {
 				s.flush()
 			}
 		case <-s.shutdown:
@@ -50,39 +57,60 @@ func (s *BufferedSender) Start() {
 	}
 }
 
+// flush the buffer/send to remove endpoint.
 func (s *BufferedSender) flush() (int, error) {
 	n, err := s.sender.Send(s.buffer.Bytes())
 	s.buffer.Reset() // clear the buffer
 	return n, err
 }
 
-func NewBufferedSender(addr string, flushIntervalBytes, flushIntervalMillis int) (*BufferedSender, error) {
+// Returns a new BufferedSender
+// addr is a string of the format "hostname:port", and must be parsable by
+// net.ResolveUDPAddr.
+// flushInterval is a time.Duration, and specifies the maximum interval for
+// packet sending. Note that if you send lots of metrics, you will send more
+// often. This is just a maximal threshold.
+// flushBytes specifies the maximum udp packet size you wish to send. If adding
+// a metric would result in a larger packet than flushBytes, the packet will
+// first be send, then the new data will be added to the next packet.
+func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int) (*BufferedSender, error) {
 	simpleSender, err := NewSimpleSender(addr)
 	if err != nil {
 		return nil, err
 	}
 
 	sender := &BufferedSender{
-		flushIntervalBytes:  flushIntervalBytes,
-		flushIntervalMillis: flushIntervalMillis,
-		sender:              simpleSender,
-		buffer:              bytes.NewBuffer(make([]byte, 0, flushIntervalBytes)),
-		reqs:                make(chan []byte),
-		shutdown:            make(chan bool),
+		flushBytes:    flushBytes,
+		flushInterval: flushInterval,
+		sender:        simpleSender,
+		buffer:        bytes.NewBuffer(make([]byte, 0, flushBytes)),
+		reqs:          make(chan []byte),
+		shutdown:      make(chan bool),
 	}
 
 	go sender.Start()
 	return sender, nil
 }
 
-func NewBufferedClient(addr, prefix string, flushIntervalBytes, flushIntervalMillis int) (*Client, error) {
-	if flushIntervalBytes <= 0 {
-		flushIntervalBytes = 1432 // https://github.com/etsy/statsd/blob/master/docs/metric_types.md#multi-metric-packets
+// Return a new BufferedClient
+// addr is a string of the format "hostname:port", and must be parsable by
+// net.ResolveUDPAddr.
+// prefix is the statsd client prefix. Can be "" if no prefix is desired.
+// flushInterval is a time.Duration, and specifies the maximum interval for
+// packet sending. Note that if you send lots of metrics, you will send more
+// often. This is just a maximal threshold.
+// flushBytes specifies the maximum udp packet size you wish to send. If adding
+// a metric would result in a larger packet than flushBytes, the packet will
+// first be send, then the new data will be added to the next packet.
+func NewBufferedClient(addr, prefix string, flushInterval time.Duration, flushBytes int) (*Client, error) {
+	if flushBytes <= 0 {
+		// https://github.com/etsy/statsd/blob/master/docs/metric_types.md#multi-metric-packets
+		flushBytes = 1432
 	}
-	if flushIntervalMillis <= 0 {
-		flushIntervalMillis = 1000
+	if flushInterval <= time.Duration(0) {
+		flushInterval = 300 * time.Millisecond
 	}
-	sender, err := NewBufferedSender(addr, flushIntervalBytes, flushIntervalMillis)
+	sender, err := NewBufferedSender(addr, flushInterval, flushBytes)
 	if err != nil {
 		return nil, err
 	}

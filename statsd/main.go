@@ -121,6 +121,7 @@ func (s *Client) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
 
+// SimpleSender provides a socket send interface
 type SimpleSender struct {
 	// underlying connection
 	c net.PacketConn
@@ -142,11 +143,15 @@ func (s *SimpleSender) Send(data []byte) (int, error) {
 	return n, nil
 }
 
+// Closes SimpleSender
 func (s *SimpleSender) Close() error {
 	err := s.c.Close()
 	return err
 }
 
+// Returns a new SimpleSender for sending to the supplied addresss
+// addr is a string of the format "hostname:port", and must be parsable by
+// net.ResolveUDPAddr.
 func NewSimpleSender(addr string) (*SimpleSender, error) {
 	c, err := net.ListenPacket("udp", ":0")
 	if err != nil {
