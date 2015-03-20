@@ -68,7 +68,10 @@ func (s *NoopClient) SetPrefix(prefix string) {
 // supplied to support api convention).
 // Use variadic arguments to support identical format as New, or a more
 // conventional no argument form.
-func NewNoop(a ...interface{}) (*NoopClient, error) {
+func NewNoopClient(a ...interface{}) (*NoopClient, error) {
 	noopClient := &NoopClient{}
 	return noopClient, nil
 }
+
+// Compatibility alias
+var NewNoop = NewNoopClient

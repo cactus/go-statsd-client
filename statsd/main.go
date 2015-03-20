@@ -113,7 +113,7 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 	return nil
 }
 
-// Sets/Updates the statsd client prefix
+// Sets/Updates the statsd client prefix.
 func (s *Client) SetPrefix(prefix string) {
 	if s == nil {
 		return
@@ -121,7 +121,7 @@ func (s *Client) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
 
-// SimpleSender provides a socket send interface
+// SimpleSender provides a socket send interface.
 type SimpleSender struct {
 	// underlying connection
 	c net.PacketConn
@@ -129,7 +129,7 @@ type SimpleSender struct {
 	ra *net.UDPAddr
 }
 
-// Send sends the data to the server endpoint
+// Send sends the data to the server endpoint.
 func (s *SimpleSender) Send(data []byte) (int, error) {
 	// no need for locking here, as the underlying fdNet
 	// already serialized writes
@@ -150,6 +150,7 @@ func (s *SimpleSender) Close() error {
 }
 
 // Returns a new SimpleSender for sending to the supplied addresss
+//
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
 func NewSimpleSender(addr string) (*SimpleSender, error) {
@@ -172,10 +173,12 @@ func NewSimpleSender(addr string) (*SimpleSender, error) {
 }
 
 // Returns a pointer to a new Client, and an error.
+//
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
+//
 // prefix is the statsd client prefix. Can be "" if no prefix is desired.
-func New(addr, prefix string) (*Client, error) {
+func NewClient(addr, prefix string) (*Client, error) {
 	sender, err := NewSimpleSender(addr)
 	if err != nil {
 		return nil, err
@@ -191,3 +194,4 @@ func New(addr, prefix string) (*Client, error) {
 
 // Compatibility alias
 var Dial = New
+var New = NewClient

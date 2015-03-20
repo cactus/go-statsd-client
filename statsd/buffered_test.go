@@ -2,6 +2,7 @@ package statsd
 
 import (
 	"bytes"
+	"log"
 	"reflect"
 	"testing"
 	"time"
@@ -103,5 +104,23 @@ func TestBufferedClient2(t *testing.T) {
 	data = bytes.TrimRight(data, "\x00")
 	if bytes.Equal(data, []byte(expected)) != true {
 		t.Fatalf("got '%s' expected '%s'", data, expected)
+	}
+}
+
+func ExampleClient_buffered() {
+	// first create a client
+	client, err := NewBufferedClient("127.0.0.1:8125", "test-client", 10*time.Millisecond, 0)
+	// handle any errors
+	if err != nil {
+		log.Fatal(err)
+	}
+	// make sure to clean up
+	defer client.Close()
+
+	// Send a stat
+	err = client.Inc("stat1", 42, 1.0)
+	// handle any errors
+	if err != nil {
+		log.Printf("Error sending metric: %+v", err)
 	}
 }

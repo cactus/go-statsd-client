@@ -34,7 +34,7 @@ func TestClient(t *testing.T) {
 	}
 	defer l.Close()
 	for _, tt := range statsdPacketTests {
-		c, err := New(l.LocalAddr().String(), tt.Prefix)
+		c, err := NewClient(l.LocalAddr().String(), tt.Prefix)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -102,7 +102,7 @@ func TestNoopClient(t *testing.T) {
 	}
 	defer l.Close()
 	for _, tt := range statsdPacketTests {
-		c, err := NewNoop(l.LocalAddr().String(), tt.Prefix)
+		c, err := NewNoopClient(l.LocalAddr().String(), tt.Prefix)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -141,7 +141,7 @@ func newUDPListener(addr string) (*net.UDPConn, error) {
 
 func ExampleClient() {
 	// first create a client
-	client, err := Dial("127.0.0.1:8125", "test-client")
+	client, err := NewClient("127.0.0.1:8125", "test-client")
 	// handle any errors
 	if err != nil {
 		log.Fatal(err)
@@ -157,7 +157,7 @@ func ExampleClient() {
 	}
 }
 
-func ExampleNilClient() {
+func ExampleClient_nil() {
 	// use interface so we can sub noop client if needed
 	var client *Client
 	var err error
@@ -170,19 +170,19 @@ func ExampleNilClient() {
 	}
 }
 
-func ExampleNoopClient() {
+func ExampleClient_noop() {
 	// use interface so we can sub noop client if needed
 	var client Statter
 	var err error
 
 	// first try to create a real client
-	client, err = Dial("not-resolvable:8125", "test-client")
-	// Lets say real client creation fails, but you don't care enough about
+	client, err = NewClient("not-resolvable:8125", "test-client")
+	// Let us say real client creation fails, but you don't care enough about
 	// stats that you don't want your program to run. Just log an error and
 	// make a NoopClient instead
 	if err != nil {
 		log.Println("Remote endpoint did not resolve. Disabling stats", err)
-		client, err = NewNoop()
+		client, err = NewNoopClient()
 	}
 	// make sure to clean up
 	defer client.Close()
