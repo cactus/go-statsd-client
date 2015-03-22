@@ -6,7 +6,7 @@ reused.
 Example usage:
 
 	// first create a client
-	client, err := statsd.New("127.0.0.1:8125", "test-client")
+	client, err := statsd.NewClient("127.0.0.1:8125", "test-client")
 	// handle any errors
 	if err != nil {
 		log.Fatal(err)
