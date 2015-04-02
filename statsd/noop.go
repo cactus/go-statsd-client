@@ -1,5 +1,7 @@
 package statsd
 
+import "time"
+
 type NoopClient struct {
 	// prefix for statsd name
 	prefix string
@@ -44,9 +46,17 @@ func (s *NoopClient) GaugeDelta(stat string, value int64, rate float32) error {
 
 // Submits a statsd timing type.
 // stat is a string name for the metric.
-// value is the integer value.
+// delta is the time duration value in milliseconds
 // rate is the sample rate (0.0 to 1.0).
 func (s *NoopClient) Timing(stat string, delta int64, rate float32) error {
+	return nil
+}
+
+// Submits a statsd timing type.
+// stat is a string name for the metric.
+// delta is the timing value as time.Duration
+// rate is the sample rate (0.0 to 1.0).
+func (s *NoopClient) TimingDuration(stat string, delta time.Duration, rate float32) error {
 	return nil
 }
 
