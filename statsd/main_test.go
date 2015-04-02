@@ -13,18 +13,19 @@ var statsdPacketTests = []struct {
 	Prefix   string
 	Method   string
 	Stat     string
-	Value    int64
+	Value    interface{}
 	Rate     float32
 	Expected string
 }{
-	{"test", "Gauge", "gauge", 1, 1.0, "test.gauge:1|g"},
-	{"test", "Inc", "count", 1, 0.999999, "test.count:1|c|@0.999999"},
-	{"test", "Inc", "count", 1, 1.0, "test.count:1|c"},
-	{"test", "Dec", "count", 1, 1.0, "test.count:-1|c"},
-	{"test", "Timing", "timing", 1, 1.0, "test.timing:1|ms"},
-	{"", "Inc", "count", 1, 1.0, "count:1|c"},
-	{"", "GaugeDelta", "gauge", 1, 1.0, "gauge:+1|g"},
-	{"", "GaugeDelta", "gauge", -1, 1.0, "gauge:-1|g"},
+	{"test", "Gauge", "gauge", int64(1), 1.0, "test.gauge:1|g"},
+	{"test", "Inc", "count", int64(1), 0.999999, "test.count:1|c|@0.999999"},
+	{"test", "Inc", "count", int64(1), 1.0, "test.count:1|c"},
+	{"test", "Dec", "count", int64(1), 1.0, "test.count:-1|c"},
+	{"test", "Timing", "timing", int64(1), 1.0, "test.timing:1|ms"},
+	{"test", "TimingDuration", "timing", time.Microsecond * 1500, 1.0, "test.timing:1.50|ms"},
+	{"", "Inc", "count", int64(1), 1.0, "count:1|c"},
+	{"", "GaugeDelta", "gauge", int64(1), 1.0, "gauge:+1|g"},
+	{"", "GaugeDelta", "gauge", int64(-1), 1.0, "gauge:-1|g"},
 }
 
 func TestClient(t *testing.T) {

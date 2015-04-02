@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"time"
 )
 
 type Statter interface {
@@ -13,6 +14,7 @@ type Statter interface {
 	Gauge(stat string, value int64, rate float32) error
 	GaugeDelta(stat string, value int64, rate float32) error
 	Timing(stat string, delta int64, rate float32) error
+	TimingDuration(stat string, delta time.Duration, rate float32) error
 	Raw(stat string, value string, rate float32) error
 	SetPrefix(prefix string)
 	Close() error
@@ -76,10 +78,22 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 
 // Submits a statsd timing type.
 // stat is a string name for the metric.
-// value is the integer value.
+// delta is the time duration value in milliseconds
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Timing(stat string, delta int64, rate float32) error {
 	dap := fmt.Sprintf("%d|ms", delta)
+	return s.Raw(stat, dap, rate)
+}
+
+// Submits a statsd timing type.
+// stat is a string name for the metric.
+// delta is the timing value as time.Duration
+// rate is the sample rate (0.0 to 1.0).
+func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) error {
+
+	ms := float64(delta) / float64(time.Millisecond)
+
+	dap := fmt.Sprintf("%.02f|ms", ms)
 	return s.Raw(stat, dap, rate)
 }
 
