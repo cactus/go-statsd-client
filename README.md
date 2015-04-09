@@ -12,6 +12,10 @@ A [StatsD][1] client for Go.
 
 Viewable online at [godoc.org][2].
 
+## Contributors
+
+See [here](https://github.com/cactus/go-statsd-client/graphs/contributors).
+
 ## Alternative Implementations
 
 Other Go Statsd Client implementations
