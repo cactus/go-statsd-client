@@ -14,29 +14,20 @@ Viewable online at [godoc.org][2].
 
 ## Contributors
 
-See [here](https://github.com/cactus/go-statsd-client/graphs/contributors).
+See [here][4].
 
 ## Alternative Implementations
 
-Other Go Statsd Client implementations
-
-*   [g2s][3]
-
-Other Go Statsd Server implementations
-
-*   [gostatsd][4]
-
-More alternative client and server implementations can be found on
-the [statsd wiki][5].
+See the [statsd wiki][5] for some additional client implementations
+(scroll down to the Go section).
 
 ## License
 
-Released under the
-[MIT license](http://www.opensource.org/licenses/mit-license.php).
-See `LICENSE.md` file for details.
+Released under the [MIT license][3]. See `LICENSE.md` file for details.
+
 
 [1]: https://github.com/etsy/statsd
 [2]: http://godoc.org/github.com/cactus/go-statsd-client/statsd
-[3]: https://github.com/peterbourgon/g2s
-[4]: https://github.com/kisielk/gostatsd
-[5]: https://github.com/etsy/statsd/wiki
+[3]: http://www.opensource.org/licenses/mit-license.php
+[4]: https://github.com/cactus/go-statsd-client/graphs/contributors
+[5]: https://github.com/etsy/statsd/wiki#client-implementations
