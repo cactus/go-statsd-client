@@ -33,6 +33,7 @@ func (s *BufferedSender) Close() error {
 // Begins ticker and read loop
 func (s *BufferedSender) Start() {
 	ticker := time.NewTicker(s.flushInterval)
+	defer ticker.Stop()
 
 	for {
 		select {
@@ -48,6 +49,8 @@ func (s *BufferedSender) Start() {
 				s.flush()
 			}
 			s.buffer.Write(newLine)
+			// if we happen to fill up the buffer, just flush right away
+			// instead of waiting for next input.
 			if s.buffer.Len() >= s.flushBytes {
 				s.flush()
 			}
@@ -56,7 +59,7 @@ func (s *BufferedSender) Start() {
 				s.flush()
 			}
 			errChan <- s.sender.Close()
-			break
+			return
 		}
 	}
 }

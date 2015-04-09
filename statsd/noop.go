@@ -60,6 +60,23 @@ func (s *NoopClient) TimingDuration(stat string, delta time.Duration, rate float
 	return nil
 }
 
+// Submits a stats set type.
+// stat is a string name for the metric.
+// value is the string value
+// rate is the sample rate (0.0 to 1.0).
+func (s *NoopClient) Set(stat string, value string, rate float32) error {
+	return nil
+}
+
+// Submits a number as a stats set type.
+// convenience method for Set with number.
+// stat is a string name for the metric.
+// value is the integer value
+// rate is the sample rate (0.0 to 1.0).
+func (s *NoopClient) SetInt(stat string, value int64, rate float32) error {
+	return nil
+}
+
 // Raw formats the statsd event data, handles sampling, prepares it,
 // and sends it to the server.
 // stat is the string name for the metric.

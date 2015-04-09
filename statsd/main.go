@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -15,6 +16,8 @@ type Statter interface {
 	GaugeDelta(stat string, value int64, rate float32) error
 	Timing(stat string, delta int64, rate float32) error
 	TimingDuration(stat string, delta time.Duration, rate float32) error
+	Set(stat string, value string, rate float32) error
+	SetInt(stat string, value int64, rate float32) error
 	Raw(stat string, value string, rate float32) error
 	SetPrefix(prefix string)
 	Close() error
@@ -95,6 +98,24 @@ func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) 
 
 	dap := fmt.Sprintf("%.02f|ms", ms)
 	return s.Raw(stat, dap, rate)
+}
+
+// Submits a stats set type
+// stat is a string name for the metric.
+// value is the string value
+// rate is the sample rate (0.0 to 1.0).
+func (s *Client) Set(stat string, value string, rate float32) error {
+	dap := fmt.Sprintf("%s|s", value)
+	return s.Raw(stat, dap, rate)
+}
+
+// Submits a number as a stats set type.
+// convenience method for Set with number.
+// stat is a string name for the metric.
+// value is the integer value
+// rate is the sample rate (0.0 to 1.0).
+func (s *Client) SetInt(stat string, value int64, rate float32) error {
+	return s.Set(stat, strconv.FormatInt(value, 10), rate)
 }
 
 // Raw formats the statsd event data, handles sampling, prepares it,
