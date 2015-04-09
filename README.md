@@ -38,7 +38,7 @@ Viewable online at [godoc.org][2].
         }
     }
 
-See docs at [godoc.org][2] for more info.
+See [docs][2] for more info.
 
 ## Contributors
 
