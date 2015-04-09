@@ -108,6 +108,35 @@ func TestBufferedClient2(t *testing.T) {
 	}
 }
 
+func TestFlushOnClose(t *testing.T) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+
+	c, err := NewBufferedClient(l.LocalAddr().String(), "test", 1*time.Second, 1024)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c.Inc("count", int64(1), 1.0)
+	c.Close()
+
+	expected := "test.count:1|c\n"
+
+	data := make([]byte, 1024)
+	_, _, err = l.ReadFrom(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data = bytes.TrimRight(data, "\x00")
+	if bytes.Equal(data, []byte(expected)) != true {
+		t.Fatalf("got '%s' expected '%s'", data, expected)
+	}
+}
+
 func ExampleClient_buffered() {
 	// first create a client
 	client, err := NewBufferedClient("127.0.0.1:8125", "test-client", 10*time.Millisecond, 0)
