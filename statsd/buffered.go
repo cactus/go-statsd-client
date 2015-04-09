@@ -13,7 +13,7 @@ type BufferedSender struct {
 	sender        Sender
 	buffer        *bytes.Buffer
 	reqs          chan []byte
-	shutdown      chan bool
+	shutdown      chan chan error
 }
 
 // Send bytes
@@ -24,9 +24,9 @@ func (s *BufferedSender) Send(data []byte) (int, error) {
 
 // Close Buffered Sender
 func (s *BufferedSender) Close() error {
-	s.shutdown <- true
-	err := s.sender.Close()
-	return err
+	errChan := make(chan error)
+	s.shutdown <- errChan
+	return <-errChan
 }
 
 // Start Buffered Sender
@@ -51,7 +51,11 @@ func (s *BufferedSender) Start() {
 			if s.buffer.Len() >= s.flushBytes {
 				s.flush()
 			}
-		case <-s.shutdown:
+		case errChan := <-s.shutdown:
+			if s.buffer.Len() > 0 {
+				s.flush()
+			}
+			errChan <- s.sender.Close()
 			break
 		}
 	}
@@ -88,7 +92,7 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 		sender:        simpleSender,
 		buffer:        bytes.NewBuffer(make([]byte, 0, flushBytes)),
 		reqs:          make(chan []byte),
-		shutdown:      make(chan bool),
+		shutdown:      make(chan chan error),
 	}
 
 	go sender.Start()
