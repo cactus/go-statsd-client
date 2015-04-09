@@ -2,6 +2,7 @@ package statsd
 
 import (
 	"bytes"
+	"sync"
 	"time"
 )
 
@@ -18,7 +19,13 @@ type BufferedSender struct {
 
 // Send bytes
 func (s *BufferedSender) Send(data []byte) (int, error) {
-	s.reqs <- data
+	// make a copy of the byte slice, so that if the underlying array
+	// changes (as part of buffering for example), we don't end up with munged
+	// data
+	c := make([]byte, len(data)+1)
+	copy(c, data)
+	c[len(data)] = '\n'
+	s.reqs <- c
 	return len(data), nil
 }
 
@@ -44,11 +51,11 @@ func (s *BufferedSender) Start() {
 		case req := <-s.reqs:
 			// StatsD supports receiving multiple metrics in a single packet by
 			// separating them with a newline.
-			newLine := append(req, '\n')
-			if s.buffer.Len()+len(newLine) > s.flushBytes {
+			if s.buffer.Len()+len(req) > s.flushBytes {
 				s.flush()
 			}
-			s.buffer.Write(newLine)
+			s.buffer.Write(req)
+
 			// if we happen to fill up the buffer, just flush right away
 			// instead of waiting for next input.
 			if s.buffer.Len() >= s.flushBytes {
@@ -134,8 +141,9 @@ func NewBufferedClient(addr, prefix string, flushInterval time.Duration, flushBy
 	}
 
 	client := &Client{
-		prefix: prefix,
-		sender: sender,
+		prefix:   prefix,
+		bytePool: &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }},
+		sender:   sender,
 	}
 
 	return client, nil

@@ -22,7 +22,8 @@ var statsdPacketTests = []struct {
 	{"test", "Inc", "count", int64(1), 1.0, "test.count:1|c"},
 	{"test", "Dec", "count", int64(1), 1.0, "test.count:-1|c"},
 	{"test", "Timing", "timing", int64(1), 1.0, "test.timing:1|ms"},
-	{"test", "TimingDuration", "timing", 1500 * time.Microsecond, 1.0, "test.timing:1.50|ms"},
+	{"test", "TimingDuration", "timing", 1500 * time.Microsecond, 1.0, "test.timing:1.5|ms"},
+	{"test", "TimingDuration", "timing", 3 * time.Microsecond, 1.0, "test.timing:0.003|ms"},
 	{"test", "Set", "strset", "pickle", 1.0, "test.strset:pickle|s"},
 	{"test", "SetInt", "intset", int64(1), 1.0, "test.intset:1|s"},
 	{"test", "GaugeDelta", "gauge", int64(1), 1.0, "test.gauge:+1|g"},
@@ -33,7 +34,7 @@ var statsdPacketTests = []struct {
 	{"", "Inc", "count", int64(1), 1.0, "count:1|c"},
 	{"", "Dec", "count", int64(1), 1.0, "count:-1|c"},
 	{"", "Timing", "timing", int64(1), 1.0, "timing:1|ms"},
-	{"", "TimingDuration", "timing", 1500 * time.Microsecond, 1.0, "timing:1.50|ms"},
+	{"", "TimingDuration", "timing", 1500 * time.Microsecond, 1.0, "timing:1.5|ms"},
 	{"", "Set", "strset", "pickle", 1.0, "strset:pickle|s"},
 	{"", "SetInt", "intset", int64(1), 1.0, "intset:1|s"},
 	{"", "GaugeDelta", "gauge", int64(1), 1.0, "gauge:+1|g"},
@@ -75,6 +76,94 @@ func TestClient(t *testing.T) {
 		}
 		c.Close()
 	}
+}
+
+func BenchmarkClientInc(b *testing.B) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer l.Close()
+	c, err := NewClient(l.LocalAddr().String(), "test")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer c.Close()
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			//i := 0; i < b.N; i++ {
+			c.Inc("benchinc", 1, 1)
+		}
+	})
+}
+
+func BenchmarkClientIncSample(b *testing.B) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer l.Close()
+	c, err := NewClient(l.LocalAddr().String(), "test")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer c.Close()
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			//i := 0; i < b.N; i++ {
+			c.Inc("benchinc", 1, 0.3)
+		}
+	})
+}
+
+func BenchmarkClientSetInt(b *testing.B) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer l.Close()
+	c, err := NewClient(l.LocalAddr().String(), "test")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer c.Close()
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			//i := 0; i < b.N; i++ {
+			c.SetInt("setint", 1, 1)
+		}
+	})
+}
+
+func BenchmarkClientSetIntSample(b *testing.B) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer l.Close()
+	c, err := NewClient(l.LocalAddr().String(), "test")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer c.Close()
+
+	b.ResetTimer()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			//i := 0; i < b.N; i++ {
+			c.SetInt("setint", 1, 0.3)
+		}
+	})
 }
 
 func TestNilClient(t *testing.T) {

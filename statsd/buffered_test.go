@@ -2,6 +2,7 @@ package statsd
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"reflect"
 	"testing"
@@ -170,6 +171,8 @@ func TestFlushOnClose(t *testing.T) {
 
 	data = bytes.TrimRight(data, "\x00")
 	if bytes.Equal(data, []byte(expected)) != true {
+		fmt.Println(data)
+		fmt.Println([]byte(expected))
 		t.Fatalf("got '%s' expected '%s'", data, expected)
 	}
 }

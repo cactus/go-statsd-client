@@ -1,11 +1,12 @@
 package statsd
 
 import (
+	"bytes"
 	"errors"
-	"fmt"
 	"math/rand"
 	"net"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -31,6 +32,8 @@ type Sender interface {
 type Client struct {
 	// prefix for statsd name
 	prefix string
+	// sync.Pool of bytes.Buffer
+	bytePool *sync.Pool
 	// packet sender
 	sender Sender
 }
@@ -49,8 +52,11 @@ func (s *Client) Close() error {
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0)
 func (s *Client) Inc(stat string, value int64, rate float32) error {
-	dap := fmt.Sprintf("%d|c", value)
-	return s.Raw(stat, dap, rate)
+	if !s.includeStat(rate) {
+		return nil
+	}
+	dap := strconv.FormatInt(value, 10) + "|c"
+	return s.submit(stat, dap, rate)
 }
 
 // Decrements a statsd count type.
@@ -58,6 +64,9 @@ func (s *Client) Inc(stat string, value int64, rate float32) error {
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Dec(stat string, value int64, rate float32) error {
+	if !s.includeStat(rate) {
+		return nil
+	}
 	return s.Inc(stat, -value, rate)
 }
 
@@ -66,8 +75,11 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Gauge(stat string, value int64, rate float32) error {
-	dap := fmt.Sprintf("%d|g", value)
-	return s.Raw(stat, dap, rate)
+	if !s.includeStat(rate) {
+		return nil
+	}
+	dap := strconv.FormatInt(value, 10) + "|g"
+	return s.submit(stat, dap, rate)
 }
 
 // Submits a delta to a statsd gauge.
@@ -75,8 +87,16 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 // value is the (positive or negative) change.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
-	dap := fmt.Sprintf("%+d|g", value)
-	return s.Raw(stat, dap, rate)
+	if !s.includeStat(rate) {
+		return nil
+	}
+
+	prefix := ""
+	if value >= 0 {
+		prefix = "+"
+	}
+	dap := prefix + strconv.FormatInt(value, 10) + "|g"
+	return s.submit(stat, dap, rate)
 }
 
 // Submits a statsd timing type.
@@ -84,8 +104,11 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 // delta is the time duration value in milliseconds
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Timing(stat string, delta int64, rate float32) error {
-	dap := fmt.Sprintf("%d|ms", delta)
-	return s.Raw(stat, dap, rate)
+	if !s.includeStat(rate) {
+		return nil
+	}
+	dap := strconv.FormatInt(delta, 10) + "|ms"
+	return s.submit(stat, dap, rate)
 }
 
 // Submits a statsd timing type.
@@ -93,11 +116,13 @@ func (s *Client) Timing(stat string, delta int64, rate float32) error {
 // delta is the timing value as time.Duration
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) error {
-
+	if !s.includeStat(rate) {
+		return nil
+	}
 	ms := float64(delta) / float64(time.Millisecond)
-
-	dap := fmt.Sprintf("%.02f|ms", ms)
-	return s.Raw(stat, dap, rate)
+	//dap := fmt.Sprintf("%.02f|ms", ms)
+	dap := strconv.FormatFloat(ms, 'f', -1, 64) + "|ms"
+	return s.submit(stat, dap, rate)
 }
 
 // Submits a stats set type
@@ -105,47 +130,91 @@ func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) 
 // value is the string value
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Set(stat string, value string, rate float32) error {
-	dap := fmt.Sprintf("%s|s", value)
-	return s.Raw(stat, dap, rate)
+	if !s.includeStat(rate) {
+		return nil
+	}
+	dap := value + "|s"
+	return s.submit(stat, dap, rate)
 }
 
 // Submits a number as a stats set type.
-// convenience method for Set with number.
 // stat is a string name for the metric.
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) SetInt(stat string, value int64, rate float32) error {
-	return s.Set(stat, strconv.FormatInt(value, 10), rate)
+	if !s.includeStat(rate) {
+		return nil
+	}
+	dap := strconv.FormatInt(value, 10) + "|s"
+	return s.submit(stat, dap, rate)
 }
 
-// Raw formats the statsd event data, handles sampling, prepares it,
-// and sends it to the server.
+// Raw submits a preformatted value.
 // stat is the string name for the metric.
 // value is a preformatted "raw" value string.
 // rate is the sample rate (0.0 to 1.0).
 func (s *Client) Raw(stat string, value string, rate float32) error {
+	if !s.includeStat(rate) {
+		return nil
+	}
+	return s.submit(stat, value, rate)
+}
+
+func (s *Client) getBuffer() *bytes.Buffer {
+	if s.bytePool == nil {
+		return &bytes.Buffer{}
+	}
+	buf := s.bytePool.Get().(*bytes.Buffer)
+	buf.Reset()
+	return buf
+}
+
+func (s *Client) putBuffer(buf *bytes.Buffer) {
+	if s.bytePool == nil {
+		return
+	}
+	s.bytePool.Put(buf)
+	return
+}
+
+// submit an already sampled raw stat
+func (s *Client) submit(stat string, value string, rate float32) error {
 	if s == nil {
 		return nil
 	}
-	if rate < 1 {
-		if rand.Float32() < rate {
-			value = fmt.Sprintf("%s|@%f", value, rate)
-		} else {
-			return nil
-		}
-	}
 
+	data := s.getBuffer()
 	if s.prefix != "" {
-		stat = fmt.Sprintf("%s.%s", s.prefix, stat)
+		data.WriteString(s.prefix + ".")
+	}
+	data.WriteString(stat + ":" + value)
+
+	if rate < 1 {
+		data.WriteString("|@")
+		data.WriteString(strconv.FormatFloat(float64(rate), 'f', 6, 32))
 	}
 
-	data := fmt.Sprintf("%s:%s", stat, value)
-
-	_, err := s.sender.Send([]byte(data))
+	d := data.Bytes()
+	_, err := s.sender.Send(d)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// check for nil client, and perform sampling calculation
+func (s *Client) includeStat(rate float32) bool {
+	if s == nil {
+		return false
+	}
+
+	if rate < 1 {
+		if rand.Float32() < rate {
+			return true
+		}
+		return false
+	}
+	return true
 }
 
 // Sets/Updates the statsd client prefix.
@@ -220,8 +289,9 @@ func NewClient(addr, prefix string) (Statter, error) {
 	}
 
 	client := &Client{
-		prefix: prefix,
-		sender: sender,
+		prefix:   prefix,
+		bytePool: &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }},
+		sender:   sender,
 	}
 
 	return client, nil
