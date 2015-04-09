@@ -14,29 +14,31 @@ Viewable online at [godoc.org][2].
 
 ## Example
 
-    import (
-        "log"
+``` go
+import (
+    "log"
 
-        "github.com/cactus/go-statsd-client/statsd"
-    )
+    "github.com/cactus/go-statsd-client/statsd"
+)
 
-    func main() {
-        // first create a client
-        client, err := statsd.NewClient("127.0.0.1:8125", "test-client")
-        // handle any errors
-        if err != nil {
-            log.Fatal(err)
-        }
-        // make sure to clean up
-        defer client.Close()
-
-        // Send a stat
-        err = client.Inc("stat1", 42, 1.0)
-        // handle any errors
-        if err != nil {
-            log.Printf("Error sending metric: %+v", err)
-        }
+func main() {
+    // first create a client
+    client, err := statsd.NewClient("127.0.0.1:8125", "test-client")
+    // handle any errors
+    if err != nil {
+        log.Fatal(err)
     }
+    // make sure to clean up
+    defer client.Close()
+
+    // Send a stat
+    err = client.Inc("stat1", 42, 1.0)
+    // handle any errors
+    if err != nil {
+        log.Printf("Error sending metric: %+v", err)
+    }
+}
+```
 
 See [docs][2] for more info.
 
