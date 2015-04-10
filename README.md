@@ -32,11 +32,7 @@ func main() {
     defer client.Close()
 
     // Send a stat
-    err = client.Inc("stat1", 42, 1.0)
-    // handle any errors
-    if err != nil {
-        log.Printf("Error sending metric: %+v", err)
-    }
+    client.Inc("stat1", 42, 1.0)
 }
 ```
 
