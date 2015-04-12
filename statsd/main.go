@@ -11,16 +11,16 @@ import (
 )
 
 type Statter interface {
-	Inc(stat string, value int64, rate float32) error
-	Dec(stat string, value int64, rate float32) error
-	Gauge(stat string, value int64, rate float32) error
-	GaugeDelta(stat string, value int64, rate float32) error
-	Timing(stat string, delta int64, rate float32) error
-	TimingDuration(stat string, delta time.Duration, rate float32) error
-	Set(stat string, value string, rate float32) error
-	SetInt(stat string, value int64, rate float32) error
-	Raw(stat string, value string, rate float32) error
-	SetPrefix(prefix string)
+	Inc(string, int64, float32) error
+	Dec(string, int64, float32) error
+	Gauge(string, int64, float32) error
+	GaugeDelta(string, int64, float32) error
+	Timing(string, int64, float32) error
+	TimingDuration(string, time.Duration, float32) error
+	Set(string, string, float32) error
+	SetInt(string, int64, float32) error
+	Raw(string, string, float32) error
+	SetPrefix(string)
 	Close() error
 }
 
@@ -178,7 +178,7 @@ func (s *Client) putBuffer(buf *bytes.Buffer) {
 }
 
 // submit an already sampled raw stat
-func (s *Client) submit(stat string, value string, suffix string, rate float32) error {
+func (s *Client) submit(stat, value, suffix string, rate float32) error {
 	if s == nil {
 		return nil
 	}
