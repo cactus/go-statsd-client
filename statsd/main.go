@@ -165,7 +165,6 @@ func (s *Client) getBuffer() *bytes.Buffer {
 		return &bytes.Buffer{}
 	}
 	buf := s.bytePool.Get().(*bytes.Buffer)
-	buf.Reset()
 	return buf
 }
 
@@ -173,6 +172,7 @@ func (s *Client) putBuffer(buf *bytes.Buffer) {
 	if s.bytePool == nil {
 		return
 	}
+	buf.Reset()
 	s.bytePool.Put(buf)
 	return
 }
@@ -184,6 +184,7 @@ func (s *Client) submit(stat, value, suffix string, rate float32) error {
 	}
 
 	data := s.getBuffer()
+	defer s.putBuffer(data)
 	if s.prefix != "" {
 		data.WriteString(s.prefix)
 		data.WriteString(".")
@@ -200,8 +201,7 @@ func (s *Client) submit(stat, value, suffix string, rate float32) error {
 		data.WriteString(strconv.FormatFloat(float64(rate), 'f', 6, 32))
 	}
 
-	d := data.Bytes()
-	_, err := s.sender.Send(d)
+	_, err := s.sender.Send(data.Bytes())
 	if err != nil {
 		return err
 	}
