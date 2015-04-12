@@ -55,8 +55,8 @@ func (s *Client) Inc(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
-	dap := strconv.FormatInt(value, 10) + "|c"
-	return s.submit(stat, dap, rate)
+	dap := strconv.FormatInt(value, 10)
+	return s.submit(stat, dap, "|c", rate)
 }
 
 // Decrements a statsd count type.
@@ -67,7 +67,8 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
-	return s.Inc(stat, -value, rate)
+	dap := strconv.FormatInt(-value, 10)
+	return s.submit(stat, dap, "|c", rate)
 }
 
 // Submits/Updates a statsd gauge type.
@@ -78,8 +79,8 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
-	dap := strconv.FormatInt(value, 10) + "|g"
-	return s.submit(stat, dap, rate)
+	dap := strconv.FormatInt(value, 10)
+	return s.submit(stat, dap, "|g", rate)
 }
 
 // Submits a delta to a statsd gauge.
@@ -95,8 +96,8 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 	if value >= 0 {
 		prefix = "+"
 	}
-	dap := prefix + strconv.FormatInt(value, 10) + "|g"
-	return s.submit(stat, dap, rate)
+	dap := prefix + strconv.FormatInt(value, 10)
+	return s.submit(stat, dap, "|g", rate)
 }
 
 // Submits a statsd timing type.
@@ -107,8 +108,8 @@ func (s *Client) Timing(stat string, delta int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
-	dap := strconv.FormatInt(delta, 10) + "|ms"
-	return s.submit(stat, dap, rate)
+	dap := strconv.FormatInt(delta, 10)
+	return s.submit(stat, dap, "|ms", rate)
 }
 
 // Submits a statsd timing type.
@@ -121,8 +122,8 @@ func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) 
 	}
 	ms := float64(delta) / float64(time.Millisecond)
 	//dap := fmt.Sprintf("%.02f|ms", ms)
-	dap := strconv.FormatFloat(ms, 'f', -1, 64) + "|ms"
-	return s.submit(stat, dap, rate)
+	dap := strconv.FormatFloat(ms, 'f', -1, 64)
+	return s.submit(stat, dap, "|ms", rate)
 }
 
 // Submits a stats set type
@@ -133,8 +134,7 @@ func (s *Client) Set(stat string, value string, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
-	dap := value + "|s"
-	return s.submit(stat, dap, rate)
+	return s.submit(stat, value, "|s", rate)
 }
 
 // Submits a number as a stats set type.
@@ -145,8 +145,8 @@ func (s *Client) SetInt(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
-	dap := strconv.FormatInt(value, 10) + "|s"
-	return s.submit(stat, dap, rate)
+	dap := strconv.FormatInt(value, 10)
+	return s.submit(stat, dap, "|s", rate)
 }
 
 // Raw submits a preformatted value.
@@ -157,7 +157,7 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
-	return s.submit(stat, value, rate)
+	return s.submit(stat, value, "", rate)
 }
 
 func (s *Client) getBuffer() *bytes.Buffer {
@@ -178,16 +178,22 @@ func (s *Client) putBuffer(buf *bytes.Buffer) {
 }
 
 // submit an already sampled raw stat
-func (s *Client) submit(stat string, value string, rate float32) error {
+func (s *Client) submit(stat string, value string, suffix string, rate float32) error {
 	if s == nil {
 		return nil
 	}
 
 	data := s.getBuffer()
 	if s.prefix != "" {
-		data.WriteString(s.prefix + ".")
+		data.WriteString(s.prefix)
+		data.WriteString(".")
 	}
-	data.WriteString(stat + ":" + value)
+	data.WriteString(stat)
+	data.WriteString(":")
+	data.WriteString(value)
+	if suffix != "" {
+		data.WriteString(suffix)
+	}
 
 	if rate < 1 {
 		data.WriteString("|@")
