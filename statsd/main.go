@@ -12,6 +12,17 @@ import (
 
 var bytePool = &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
 
+func getBuffer() *bytes.Buffer {
+	buf := bytePool.Get().(*bytes.Buffer)
+	return buf
+}
+
+func putBuffer(buf *bytes.Buffer) {
+	buf.Reset()
+	bytePool.Put(buf)
+	return
+}
+
 type Statter interface {
 	Inc(string, int64, float32) error
 	Dec(string, int64, float32) error
@@ -160,25 +171,14 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 	return s.submit(stat, value, "", rate)
 }
 
-func (s *Client) getBuffer() *bytes.Buffer {
-	buf := bytePool.Get().(*bytes.Buffer)
-	return buf
-}
-
-func (s *Client) putBuffer(buf *bytes.Buffer) {
-	buf.Reset()
-	bytePool.Put(buf)
-	return
-}
-
 // submit an already sampled raw stat
 func (s *Client) submit(stat, value, suffix string, rate float32) error {
 	if s == nil {
 		return nil
 	}
 
-	data := s.getBuffer()
-	defer s.putBuffer(data)
+	data := getBuffer()
+	defer putBuffer(data)
 	if s.prefix != "" {
 		data.WriteString(s.prefix)
 		data.WriteString(".")
