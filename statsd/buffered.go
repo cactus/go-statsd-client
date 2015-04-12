@@ -2,7 +2,6 @@ package statsd
 
 import (
 	"bytes"
-	"sync"
 	"time"
 )
 
@@ -141,9 +140,8 @@ func NewBufferedClient(addr, prefix string, flushInterval time.Duration, flushBy
 	}
 
 	client := &Client{
-		prefix:   prefix,
-		bytePool: &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }},
-		sender:   sender,
+		prefix: prefix,
+		sender: sender,
 	}
 
 	return client, nil

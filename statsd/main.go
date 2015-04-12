@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var bytePool = &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
+
 type Statter interface {
 	Inc(string, int64, float32) error
 	Dec(string, int64, float32) error
@@ -32,8 +34,6 @@ type Sender interface {
 type Client struct {
 	// prefix for statsd name
 	prefix string
-	// sync.Pool of bytes.Buffer
-	bytePool *sync.Pool
 	// packet sender
 	sender Sender
 }
@@ -161,19 +161,13 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 }
 
 func (s *Client) getBuffer() *bytes.Buffer {
-	if s.bytePool == nil {
-		return &bytes.Buffer{}
-	}
-	buf := s.bytePool.Get().(*bytes.Buffer)
+	buf := bytePool.Get().(*bytes.Buffer)
 	return buf
 }
 
 func (s *Client) putBuffer(buf *bytes.Buffer) {
-	if s.bytePool == nil {
-		return
-	}
 	buf.Reset()
-	s.bytePool.Put(buf)
+	bytePool.Put(buf)
 	return
 }
 
@@ -295,9 +289,8 @@ func NewClient(addr, prefix string) (Statter, error) {
 	}
 
 	client := &Client{
-		prefix:   prefix,
-		bytePool: &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }},
-		sender:   sender,
+		prefix: prefix,
+		sender: sender,
 	}
 
 	return client, nil
