@@ -10,16 +10,16 @@ import (
 	"time"
 )
 
-var bytePool = &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
+var bufPool = &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
 
 func getBuffer() *bytes.Buffer {
-	buf := bytePool.Get().(*bytes.Buffer)
+	buf := bufPool.Get().(*bytes.Buffer)
 	return buf
 }
 
 func putBuffer(buf *bytes.Buffer) {
 	buf.Reset()
-	bytePool.Put(buf)
+	bufPool.Put(buf)
 	return
 }
 
