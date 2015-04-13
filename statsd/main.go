@@ -10,7 +10,9 @@ import (
 	"time"
 )
 
-var bufPool = &sync.Pool{New: func() interface{} { return &bytes.Buffer{} }}
+var bufPool = &sync.Pool{New: func() interface{} {
+	return bytes.NewBuffer(make([]byte, 0, 128))
+}}
 
 func getBuffer() *bytes.Buffer {
 	buf := bufPool.Get().(*bytes.Buffer)
