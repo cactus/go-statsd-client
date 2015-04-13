@@ -5,6 +5,7 @@ Changelog
 *   Add Set and SetInt funcs to support Sets
 *   Properly flush BufferedSender on close (bugfix)
 *   Add TimingDuration with support for sub-millisecond timing
+*   fewer allocations, better performance of BufferedClient
 
 ## 2.0.0 2015-03-19
 *   BufferedClient - send multiple stats at once
