@@ -2,6 +2,8 @@ Changelog
 =========
 
 ## head
+
+## 2.0.1 2015-07-12
 *   Add Set and SetInt funcs to support Sets
 *   Properly flush BufferedSender on close (bugfix)
 *   Add TimingDuration with support for sub-millisecond timing
