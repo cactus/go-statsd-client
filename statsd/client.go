@@ -191,10 +191,7 @@ func (s *Client) submit(stat, value, suffix string, rate float32) error {
 	}
 
 	_, err := s.sender.Send(data.Bytes())
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // check for nil client, and perform sampling calculation
