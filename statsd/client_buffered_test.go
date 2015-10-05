@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -133,6 +134,8 @@ func TestBufferedClientBigPacket(t *testing.T) {
 		expected = expected + tt.Expected + "\n"
 	}
 
+	expected = strings.TrimSuffix(expected, "\n")
+
 	time.Sleep(12 * time.Millisecond)
 	data := make([]byte, 1024)
 	_, _, err = l.ReadFrom(data)
@@ -161,7 +164,7 @@ func TestFlushOnClose(t *testing.T) {
 	c.Inc("count", int64(1), 1.0)
 	c.Close()
 
-	expected := "test.count:1|c\n"
+	expected := "test.count:1|c"
 
 	data := make([]byte, 1024)
 	_, _, err = l.ReadFrom(data)

@@ -122,7 +122,7 @@ func (s *BufferedSender) run() {
 
 // flush the buffer/send to remove endpoint.
 func (s *BufferedSender) flush() (int, error) {
-	n, err := s.sender.Send(s.buffer.Bytes())
+	n, err := s.sender.Send(bytes.TrimSuffix(s.buffer.Bytes(), []byte("\n")))
 	s.buffer.Reset() // clear the buffer
 	return n, err
 }
