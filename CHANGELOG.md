@@ -3,6 +3,10 @@ Changelog
 
 ## head
 
+## 2.0.2 2015-10-16
+*   remove trailing newline in buffered sends to avoid etsy statsd log messages
+*   minor internal code reorganization for clarity (no api changes)
+
 ## 2.0.1 2015-07-12
 *   Add Set and SetInt funcs to support Sets
 *   Properly flush BufferedSender on close (bugfix)
