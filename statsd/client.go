@@ -23,7 +23,7 @@ func putBuffer(buf *bytes.Buffer) {
 	return
 }
 
-type Statter interface {
+type StatSender interface {
 	Inc(string, int64, float32) error
 	Dec(string, int64, float32) error
 	Gauge(string, int64, float32) error
@@ -33,8 +33,18 @@ type Statter interface {
 	Set(string, string, float32) error
 	SetInt(string, int64, float32) error
 	Raw(string, string, float32) error
+}
+
+type Statter interface {
+	StatSender
+	NewSubStatter(string) SubStatter
 	SetPrefix(string)
 	Close() error
+}
+
+type SubStatter interface {
+	StatSender
+	NewSubStatter(string) SubStatter
 }
 
 type Client struct {
@@ -215,6 +225,18 @@ func (s *Client) SetPrefix(prefix string) {
 		return
 	}
 	s.prefix = prefix
+}
+
+// Returns a SubStatter with appended prefix
+func (s *Client) NewSubStatter(prefix string) SubStatter {
+	var c *Client
+	if s != nil {
+		c = &Client{
+			prefix: s.prefix + "." + prefix,
+			sender: s.sender,
+		}
+	}
+	return c
 }
 
 // Returns a pointer to a new Client, and an error.

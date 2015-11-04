@@ -91,6 +91,11 @@ func (s *NoopClient) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
 
+// Returns a SubStatter with appended prefix
+func (s *NoopClient) NewSubStatter(prefix string) SubStatter {
+	return &NoopClient{}
+}
+
 // Returns a pointer to a new NoopClient, and an error (always nil, just
 // supplied to support api convention).
 // Use variadic arguments to support identical format as NewClient, or a more
