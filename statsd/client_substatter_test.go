@@ -3,6 +3,7 @@ package statsd
 import (
 	"bytes"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -60,6 +61,47 @@ func TestSubStatterClient(t *testing.T) {
 
 		data = bytes.TrimRight(data, "\x00")
 		if bytes.Equal(data, []byte(tt.Expected)) != true {
+			c.Close()
+			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
+		}
+		c.Close()
+	}
+}
+
+func TestSubSubStatterClient(t *testing.T) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	for _, tt := range statsdSubStatterPacketTests {
+		c, err := NewClient(l.LocalAddr().String(), tt.Prefix)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := c.NewSubStatter(tt.SubPrefix)
+		s = s.NewSubStatter("sub2")
+
+		method := reflect.ValueOf(s).MethodByName(tt.Method)
+		e := method.Call([]reflect.Value{
+			reflect.ValueOf(tt.Stat),
+			reflect.ValueOf(tt.Value),
+			reflect.ValueOf(tt.Rate)})[0]
+		errInter := e.Interface()
+		if errInter != nil {
+			t.Fatal(errInter.(error))
+		}
+
+		data := make([]byte, 128)
+		_, _, err = l.ReadFrom(data)
+		if err != nil {
+			c.Close()
+			t.Fatal(err)
+		}
+
+		data = bytes.TrimRight(data, "\x00")
+		expected := strings.Replace(tt.Expected, "sub.", "sub.sub2.", -1)
+		if bytes.Equal(data, []byte(expected)) != true {
 			c.Close()
 			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
 		}
