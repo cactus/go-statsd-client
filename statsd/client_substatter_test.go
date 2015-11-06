@@ -68,6 +68,60 @@ func TestSubStatterClient(t *testing.T) {
 	}
 }
 
+func TestMultSubStatterClient(t *testing.T) {
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	for _, tt := range statsdSubStatterPacketTests {
+		c, err := NewClient(l.LocalAddr().String(), tt.Prefix)
+		if err != nil {
+			t.Fatal(err)
+		}
+		s1 := c.NewSubStatter("sub1")
+		s2 := c.NewSubStatter("sub2")
+
+		responses := [][]byte{}
+		for _, s := range []SubStatter{s1, s2} {
+			method := reflect.ValueOf(s).MethodByName(tt.Method)
+			e := method.Call([]reflect.Value{
+				reflect.ValueOf(tt.Stat),
+				reflect.ValueOf(tt.Value),
+				reflect.ValueOf(tt.Rate)})[0]
+			errInter := e.Interface()
+			if errInter != nil {
+				t.Fatal(errInter.(error))
+			}
+
+			data := make([]byte, 128)
+			_, _, err = l.ReadFrom(data)
+			if err != nil {
+				c.Close()
+				t.Fatal(err)
+			}
+
+			data = bytes.TrimRight(data, "\x00")
+			responses = append(responses, data)
+		}
+
+		expected := strings.Replace(tt.Expected, "sub.", "sub1.", -1)
+		if bytes.Equal(responses[0], []byte(expected)) != true {
+			c.Close()
+			t.Fatalf("%s got '%s' expected '%s'",
+				tt.Method, responses[0], tt.Expected)
+		}
+
+		expected = strings.Replace(tt.Expected, "sub.", "sub2.", -1)
+		if bytes.Equal(responses[1], []byte(expected)) != true {
+			c.Close()
+			t.Fatalf("%s got '%s' expected '%s'",
+				tt.Method, responses[1], tt.Expected)
+		}
+		c.Close()
+	}
+}
+
 func TestSubSubStatterClient(t *testing.T) {
 	l, err := newUDPListener("127.0.0.1:0")
 	if err != nil {
@@ -79,8 +133,7 @@ func TestSubSubStatterClient(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		s := c.NewSubStatter(tt.SubPrefix)
-		s = s.NewSubStatter("sub2")
+		s := c.NewSubStatter(tt.SubPrefix).NewSubStatter("sub2")
 
 		method := reflect.ValueOf(s).MethodByName(tt.Method)
 		e := method.Call([]reflect.Value{
@@ -140,13 +193,7 @@ func TestNilSubStatterClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer l.Close()
-	/*
-		var c *Client
-		_, err = c.NewSubStatter("failboat")
-		if err == nil {
-			t.Fatal("Unexpected lack of error")
-		}
-	*/
+
 	for _, tt := range statsdSubStatterPacketTests {
 		var c *Client
 		s := c.NewSubStatter(tt.SubPrefix)
