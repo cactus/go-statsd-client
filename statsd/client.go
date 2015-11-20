@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"math/rand"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -231,8 +232,10 @@ func (s *Client) SetPrefix(prefix string) {
 func (s *Client) NewSubStatter(prefix string) SubStatter {
 	var c *Client
 	if s != nil {
+		subfix := dotprefix(prefix)
+
 		c = &Client{
-			prefix: s.prefix + "." + prefix,
+			prefix: s.prefix + subfix,
 			sender: s.sender,
 		}
 	}
@@ -259,6 +262,13 @@ func NewClient(addr, prefix string) (Statter, error) {
 	return client, nil
 }
 
-// Compatibility alias
+func dotprefix(prefix string) string {
+	if prefix != "" && !strings.HasPrefix(prefix, ".") {
+		return "." + prefix
+	}
+	return prefix
+}
+
+// Compatibility aliases
 var Dial = New
 var New = NewClient
