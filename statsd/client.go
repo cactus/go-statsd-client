@@ -221,6 +221,7 @@ func (s *Client) includeStat(rate float32) bool {
 }
 
 // Sets/Updates the statsd client prefix.
+// Note: Does not change the prefix of any SubStatters.
 func (s *Client) SetPrefix(prefix string) {
 	if s == nil {
 		return
@@ -262,6 +263,7 @@ func NewClient(addr, prefix string) (Statter, error) {
 	return client, nil
 }
 
+// helper method to ensure a dot is added only when necessary
 func dotprefix(prefix string) string {
 	if prefix != "" && !strings.HasPrefix(prefix, ".") {
 		return "." + prefix
