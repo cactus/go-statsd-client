@@ -28,6 +28,8 @@ var statsdSubStatterPacketTests = []struct {
 	{"test", "sub", "SetInt", "intset", int64(1), 1.0, "test.sub.intset:1|s"},
 	{"test", "sub", "GaugeDelta", "gauge", int64(1), 1.0, "test.sub.gauge:+1|g"},
 	{"test", "sub", "GaugeDelta", "gauge", int64(-1), 1.0, "test.sub.gauge:-1|g"},
+	// empty sub prefix -- note: not used in subsub tests
+	{"test", "", "Inc", "count", int64(1), 1.0, "test.count:1|c"},
 }
 
 func TestSubStatterClient(t *testing.T) {
@@ -75,6 +77,10 @@ func TestMultSubStatterClient(t *testing.T) {
 	}
 	defer l.Close()
 	for _, tt := range statsdSubStatterPacketTests {
+		// ignore empty sub test for this, as there is nothing to regex sub
+		if tt.SubPrefix == "" {
+			continue
+		}
 		c, err := NewClient(l.LocalAddr().String(), tt.Prefix)
 		if err != nil {
 			t.Fatal(err)
@@ -129,6 +135,10 @@ func TestSubSubStatterClient(t *testing.T) {
 	}
 	defer l.Close()
 	for _, tt := range statsdSubStatterPacketTests {
+		// ignore empty sub test for this, as there is nothing to regex sub
+		if tt.SubPrefix == "" {
+			continue
+		}
 		c, err := NewClient(l.LocalAddr().String(), tt.Prefix)
 		if err != nil {
 			t.Fatal(err)
