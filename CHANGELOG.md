@@ -3,6 +3,9 @@ Changelog
 
 ## head
 
+## 3.0.0 2015-12-04
+*   add substatter support
+
 ## 2.0.2 2015-10-16
 *   remove trailing newline in buffered sends to avoid etsy statsd log messages
 *   minor internal code reorganization for clarity (no api changes)
