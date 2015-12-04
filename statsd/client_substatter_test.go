@@ -276,7 +276,7 @@ func ExampleClient_substatter() {
 	defer client.Close()
 
 	// create a substatter
-	subclient := NewSubStatter("sub")
+	subclient := client.NewSubStatter("sub")
 	// send a stat
 	err = subclient.Inc("stat1", 42, 1.0)
 	// handle any errors
