@@ -2,6 +2,7 @@ package statsd
 
 import (
 	"bytes"
+	"log"
 	"reflect"
 	"strings"
 	"testing"
@@ -261,5 +262,25 @@ func TestNoopSubStatterClient(t *testing.T) {
 			t.Fatal(err)
 		}
 		c.Close()
+	}
+}
+
+func ExampleClient_substatter() {
+	// first create a client
+	client, err := NewClient("127.0.0.1:8125", "test-client")
+	// handle any errors
+	if err != nil {
+		log.Fatal(err)
+	}
+	// make sure to clean up
+	defer client.Close()
+
+	// create a substatter
+	subclient := NewSubStatter("sub")
+	// send a stat
+	err = subclient.Inc("stat1", 42, 1.0)
+	// handle any errors
+	if err != nil {
+		log.Printf("Error sending metric: %+v", err)
 	}
 }
