@@ -50,6 +50,10 @@ func (s *BufferedSender) Close() error {
 	// since we are running, write lock during cleanup
 	s.mx.Lock()
 	defer s.mx.Unlock()
+	// check again, might have mutated since runlock
+	if !s.running {
+		return nil
+	}
 
 	errChan := make(chan error)
 	s.running = false
@@ -71,6 +75,10 @@ func (s *BufferedSender) Start() {
 	// write lock to start running
 	s.mx.Lock()
 	defer s.mx.Unlock()
+	// check again, might have mutated since runlock
+	if s.running {
+		return
+	}
 	s.running = true
 	s.reqs = make(chan []byte, 8)
 	go s.run()
