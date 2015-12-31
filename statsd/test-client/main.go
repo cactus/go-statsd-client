@@ -75,7 +75,7 @@ func main() {
 	}
 
 	pertick := opts.Volume / int(opts.Duration.Seconds()) / 10
-	// add some extra tiem, because the first tick takes a while
+	// add some extra time, because the first tick takes a while
 	ender := time.After(opts.Duration + 100*time.Millisecond)
 	c := time.Tick(time.Second / 10)
 	count := 0
