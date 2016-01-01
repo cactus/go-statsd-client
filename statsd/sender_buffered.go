@@ -18,19 +18,19 @@ type BufferedSender struct {
 	reqs          chan []byte
 	shutdown      chan chan error
 	running       uint32
-	mx            sync.Mutex
+	mx            sync.RWMutex
 }
 
 // Send bytes.
 func (s *BufferedSender) Send(data []byte) (int, error) {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
 	if atomic.LoadUint32(&s.running) == 0 {
 		return 0, fmt.Errorf("BufferedSender is not running")
 	}
 
 	// copy bytes, because the caller may mutate the slice (and the underlying
 	// array) after we return, since we may not end up sending right away.
-	s.mx.Lock()
-	defer s.mx.Unlock()
 	c := make([]byte, len(data))
 	dlen := copy(c, data)
 	s.reqs <- c
