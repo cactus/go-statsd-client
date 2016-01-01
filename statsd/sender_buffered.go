@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -16,20 +17,20 @@ type BufferedSender struct {
 	buffer        *bytes.Buffer
 	reqs          chan []byte
 	shutdown      chan chan error
-	running       bool
-	mx            sync.RWMutex
+	running       uint32
+	mx            sync.Mutex
 }
 
 // Send bytes.
 func (s *BufferedSender) Send(data []byte) (int, error) {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
-	if !s.running {
+	if atomic.LoadUint32(&s.running) == 0 {
 		return 0, fmt.Errorf("BufferedSender is not running")
 	}
 
 	// copy bytes, because the caller may mutate the slice (and the underlying
 	// array) after we return, since we may not end up sending right away.
+	s.mx.Lock()
+	defer s.mx.Unlock()
 	c := make([]byte, len(data))
 	dlen := copy(c, data)
 	s.reqs <- c
@@ -40,23 +41,19 @@ func (s *BufferedSender) Send(data []byte) (int, error) {
 func (s *BufferedSender) Close() error {
 	// only need really read lock to see if we are currently
 	// running or not
-	s.mx.RLock()
-	if !s.running {
-		s.mx.RUnlock()
+	if atomic.LoadUint32(&s.running) == 0 {
 		return nil
 	}
-	s.mx.RUnlock()
 
 	// since we are running, write lock during cleanup
 	s.mx.Lock()
 	defer s.mx.Unlock()
-	// check again, might have mutated since runlock
-	if !s.running {
+	if s.running == 0 {
 		return nil
 	}
 
+	defer atomic.StoreUint32(&s.running, 0)
 	errChan := make(chan error)
-	s.running = false
 	s.shutdown <- errChan
 	return <-errChan
 }
@@ -64,22 +61,19 @@ func (s *BufferedSender) Close() error {
 // Start Buffered Sender
 // Begins ticker and read loop
 func (s *BufferedSender) Start() {
-	// read lock to see if we are running
-	s.mx.RLock()
-	if s.running {
-		s.mx.RUnlock()
+	// check to see if we are running
+	if atomic.LoadUint32(&s.running) == 1 {
 		return
 	}
-	s.mx.RUnlock()
 
 	// write lock to start running
 	s.mx.Lock()
 	defer s.mx.Unlock()
 	// check again, might have mutated since runlock
-	if s.running {
+	if s.running == 1 {
 		return
 	}
-	s.running = true
+	defer atomic.StoreUint32(&s.running, 1)
 	s.reqs = make(chan []byte, 8)
 	go s.run()
 }
