@@ -38,19 +38,9 @@ func (s *BufferedSender) Send(data []byte) (int, error) {
 
 // Close Buffered Sender
 func (s *BufferedSender) Close() error {
-	// only need really read lock to see if we are currently
-	// running or not
-	s.mx.RLock()
-	if !s.running {
-		s.mx.RUnlock()
-		return nil
-	}
-	s.mx.RUnlock()
-
 	// since we are running, write lock during cleanup
 	s.mx.Lock()
 	defer s.mx.Unlock()
-	// check again, might have mutated since runlock
 	if !s.running {
 		return nil
 	}
@@ -64,21 +54,13 @@ func (s *BufferedSender) Close() error {
 // Start Buffered Sender
 // Begins ticker and read loop
 func (s *BufferedSender) Start() {
-	// read lock to see if we are running
-	s.mx.RLock()
-	if s.running {
-		s.mx.RUnlock()
-		return
-	}
-	s.mx.RUnlock()
-
 	// write lock to start running
 	s.mx.Lock()
 	defer s.mx.Unlock()
-	// check again, might have mutated since runlock
 	if s.running {
 		return
 	}
+
 	s.running = true
 	s.reqs = make(chan []byte, 8)
 	go s.run()
