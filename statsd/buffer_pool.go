@@ -20,11 +20,10 @@ func newBufferPool() *bufferPool {
 }
 
 func (bp *bufferPool) Get() *bytes.Buffer {
-	b := (bp.Pool.Get()).(*bytes.Buffer)
-	b.Truncate(0)
-	return b
+	return (bp.Pool.Get()).(*bytes.Buffer)
 }
 
 func (bp *bufferPool) Put(b *bytes.Buffer) {
+	b.Truncate(0)
 	bp.Pool.Put(b)
 }
