@@ -6,17 +6,15 @@ import (
 )
 
 type bufferPool struct {
-	sync.Pool
+	*sync.Pool
 }
 
 func newBufferPool() *bufferPool {
-	bp := &bufferPool{}
-
-	bp.New = func() interface{} {
-		return &bytes.Buffer{}
+	return &bufferPool{
+		&sync.Pool{New: func() interface{} {
+			return &bytes.Buffer{}
+		}},
 	}
-
-	return bp
 }
 
 func (bp *bufferPool) Get() *bytes.Buffer {

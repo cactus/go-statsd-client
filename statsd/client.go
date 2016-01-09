@@ -1,28 +1,13 @@
 package statsd
 
 import (
-	"bytes"
 	"math/rand"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
-var bufPool = &sync.Pool{New: func() interface{} {
-	return bytes.NewBuffer(make([]byte, 0, 128))
-}}
-
-func getBuffer() *bytes.Buffer {
-	buf := bufPool.Get().(*bytes.Buffer)
-	return buf
-}
-
-func putBuffer(buf *bytes.Buffer) {
-	buf.Reset()
-	bufPool.Put(buf)
-	return
-}
+var bufPool = newBufferPool()
 
 type StatSender interface {
 	Inc(string, int64, float32) error
@@ -183,8 +168,8 @@ func (s *Client) submit(stat, value, suffix string, rate float32) error {
 		return nil
 	}
 
-	data := getBuffer()
-	defer putBuffer(data)
+	data := bufPool.Get()
+	defer bufPool.Put(data)
 	if s.prefix != "" {
 		data.WriteString(s.prefix)
 		data.WriteString(".")
