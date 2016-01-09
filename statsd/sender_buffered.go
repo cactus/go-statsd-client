@@ -14,10 +14,11 @@ type BufferedSender struct {
 	flushInterval time.Duration
 	sender        Sender
 	buffer        *bytes.Buffer
-	reqs          chan []byte
+	reqs          chan *bytes.Buffer
 	shutdown      chan chan error
 	running       bool
 	mx            sync.RWMutex
+	pool          *bufferPool
 }
 
 // Send bytes.
@@ -30,9 +31,13 @@ func (s *BufferedSender) Send(data []byte) (int, error) {
 
 	// copy bytes, because the caller may mutate the slice (and the underlying
 	// array) after we return, since we may not end up sending right away.
-	c := make([]byte, len(data))
-	dlen := copy(c, data)
-	s.reqs <- c
+	b := s.pool.Get()
+	dlen, err := b.Write(data)
+	if err != nil {
+		return dlen, err
+	}
+
+	s.reqs <- b
 	return dlen, nil
 }
 
@@ -62,7 +67,7 @@ func (s *BufferedSender) Start() {
 	}
 
 	s.running = true
-	s.reqs = make(chan []byte, 8)
+	s.reqs = make(chan *bytes.Buffer, 8)
 	go s.run()
 }
 
@@ -79,10 +84,11 @@ func (s *BufferedSender) run() {
 		case req := <-s.reqs:
 			// StatsD supports receiving multiple metrics in a single packet by
 			// separating them with a newline.
-			if s.buffer.Len()+len(req)+1 > s.flushBytes {
+			if s.buffer.Len()+req.Len()+1 > s.flushBytes {
 				s.flush()
 			}
-			s.buffer.Write(req)
+			req.WriteTo(s.buffer)
+			s.pool.Put(req)
 			s.buffer.WriteByte('\n')
 
 			// if we happen to fill up the buffer, just flush right away
@@ -93,10 +99,11 @@ func (s *BufferedSender) run() {
 		case errChan := <-s.shutdown:
 			close(s.reqs)
 			for req := range s.reqs {
-				if s.buffer.Len()+len(req)+1 > s.flushBytes {
+				if s.buffer.Len()+req.Len()+1 > s.flushBytes {
 					s.flush()
 				}
-				s.buffer.Write(req)
+				req.WriteTo(s.buffer)
+				s.pool.Put(req)
 				s.buffer.WriteByte('\n')
 			}
 
@@ -141,6 +148,7 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 		sender:        simpleSender,
 		buffer:        bytes.NewBuffer(make([]byte, 0, flushBytes)),
 		shutdown:      make(chan chan error),
+		pool:          newBufferPool(),
 	}
 
 	sender.Start()
