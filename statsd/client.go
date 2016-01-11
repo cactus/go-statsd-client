@@ -45,6 +45,7 @@ func (s *Client) Close() error {
 	if s == nil {
 		return nil
 	}
+
 	err := s.sender.Close()
 	return err
 }
@@ -57,6 +58,7 @@ func (s *Client) Inc(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	dap := strconv.FormatInt(value, 10)
 	return s.submit(stat, dap, "|c", rate)
 }
@@ -69,6 +71,7 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	dap := strconv.FormatInt(-value, 10)
 	return s.submit(stat, dap, "|c", rate)
 }
@@ -81,6 +84,7 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	dap := strconv.FormatInt(value, 10)
 	return s.submit(stat, dap, "|g", rate)
 }
@@ -110,6 +114,7 @@ func (s *Client) Timing(stat string, delta int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	dap := strconv.FormatInt(delta, 10)
 	return s.submit(stat, dap, "|ms", rate)
 }
@@ -122,6 +127,7 @@ func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) 
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	ms := float64(delta) / float64(time.Millisecond)
 	//dap := fmt.Sprintf("%.02f|ms", ms)
 	dap := strconv.FormatFloat(ms, 'f', -1, 64)
@@ -136,6 +142,7 @@ func (s *Client) Set(stat string, value string, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	return s.submit(stat, value, "|s", rate)
 }
 
@@ -147,6 +154,7 @@ func (s *Client) SetInt(stat string, value int64, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	dap := strconv.FormatInt(value, 10)
 	return s.submit(stat, dap, "|s", rate)
 }
@@ -159,6 +167,7 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
+
 	return s.submit(stat, value, "", rate)
 }
 
@@ -211,6 +220,7 @@ func (s *Client) SetPrefix(prefix string) {
 	if s == nil {
 		return
 	}
+
 	s.prefix = prefix
 }
 
@@ -253,6 +263,7 @@ func dotprefix(prefix string) string {
 	if prefix != "" && !strings.HasPrefix(prefix, ".") {
 		return "." + prefix
 	}
+
 	return prefix
 }
 
