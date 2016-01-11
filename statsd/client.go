@@ -173,10 +173,6 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 
 // submit an already sampled raw stat
 func (s *Client) submit(stat, value, suffix string, rate float32) error {
-	if s == nil {
-		return nil
-	}
-
 	data := bufPool.Get()
 	defer bufPool.Put(data)
 	if s.prefix != "" {
