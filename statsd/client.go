@@ -1,6 +1,7 @@
 package statsd
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -59,8 +60,7 @@ func (s *Client) Inc(stat string, value int64, rate float32) error {
 		return nil
 	}
 
-	dap := strconv.FormatInt(value, 10)
-	return s.submit(stat, dap, "|c", rate)
+	return s.submit(stat, "", value, "|c", rate)
 }
 
 // Decrements a statsd count type.
@@ -72,8 +72,7 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 		return nil
 	}
 
-	dap := strconv.FormatInt(-value, 10)
-	return s.submit(stat, dap, "|c", rate)
+	return s.submit(stat, "", -value, "|c", rate)
 }
 
 // Submits/Updates a statsd gauge type.
@@ -85,8 +84,7 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 		return nil
 	}
 
-	dap := strconv.FormatInt(value, 10)
-	return s.submit(stat, dap, "|g", rate)
+	return s.submit(stat, "", value, "|g", rate)
 }
 
 // Submits a delta to a statsd gauge.
@@ -98,12 +96,13 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 		return nil
 	}
 
-	prefix := ""
+	// if negative, the submit formatter will prefix with a - already
+	// so in that case, use an empty prefix here.
+	symbol := ""
 	if value >= 0 {
-		prefix = "+"
+		symbol = "+"
 	}
-	dap := prefix + strconv.FormatInt(value, 10)
-	return s.submit(stat, dap, "|g", rate)
+	return s.submit(stat, symbol, value, "|g", rate)
 }
 
 // Submits a statsd timing type.
@@ -115,8 +114,7 @@ func (s *Client) Timing(stat string, delta int64, rate float32) error {
 		return nil
 	}
 
-	dap := strconv.FormatInt(delta, 10)
-	return s.submit(stat, dap, "|ms", rate)
+	return s.submit(stat, "", delta, "|ms", rate)
 }
 
 // Submits a statsd timing type.
@@ -129,9 +127,7 @@ func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) 
 	}
 
 	ms := float64(delta) / float64(time.Millisecond)
-	//dap := fmt.Sprintf("%.02f|ms", ms)
-	dap := strconv.FormatFloat(ms, 'f', -1, 64)
-	return s.submit(stat, dap, "|ms", rate)
+	return s.submit(stat, "", ms, "|ms", rate)
 }
 
 // Submits a stats set type
@@ -143,7 +139,7 @@ func (s *Client) Set(stat string, value string, rate float32) error {
 		return nil
 	}
 
-	return s.submit(stat, value, "|s", rate)
+	return s.submit(stat, "", value, "|s", rate)
 }
 
 // Submits a number as a stats set type.
@@ -155,8 +151,7 @@ func (s *Client) SetInt(stat string, value int64, rate float32) error {
 		return nil
 	}
 
-	dap := strconv.FormatInt(value, 10)
-	return s.submit(stat, dap, "|s", rate)
+	return s.submit(stat, "", value, "|s", rate)
 }
 
 // Raw submits a preformatted value.
@@ -168,30 +163,52 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 		return nil
 	}
 
-	return s.submit(stat, value, "", rate)
+	return s.submit(stat, "", value, "", rate)
 }
 
 // submit an already sampled raw stat
-func (s *Client) submit(stat, value, suffix string, rate float32) error {
+func (s *Client) submit(stat, vprefix string, value interface{}, suffix string, rate float32) error {
 	data := bufPool.Get()
 	defer bufPool.Put(data)
+
 	if s.prefix != "" {
 		data.WriteString(s.prefix)
 		data.WriteString(".")
 	}
+
 	data.WriteString(stat)
 	data.WriteString(":")
-	data.WriteString(value)
+
+	if vprefix != "" {
+		data.WriteString(vprefix)
+	}
+
+	// sadly, no way to jam this back into the bytes.Buffer without
+	// doing a few allocations... avoiding those is the whole point here...
+	// so from here on out just use it as a raw []byte
+	b := data.Bytes()
+
+	switch v := value.(type) {
+	case string:
+		b = append(b, v...)
+	case int64:
+		b = strconv.AppendInt(b, v, 10)
+	case float64:
+		b = strconv.AppendFloat(b, v, 'f', -1, 64)
+	default:
+		return fmt.Errorf("No matching type format")
+	}
+
 	if suffix != "" {
-		data.WriteString(suffix)
+		b = append(b, suffix...)
 	}
 
 	if rate < 1 {
-		data.WriteString("|@")
-		data.WriteString(strconv.FormatFloat(float64(rate), 'f', 6, 32))
+		b = append(b, "|@"...)
+		b = strconv.AppendFloat(b, float64(rate), 'f', 6, 32)
 	}
 
-	_, err := s.sender.Send(data.Bytes())
+	_, err := s.sender.Send(b)
 	return err
 }
 
