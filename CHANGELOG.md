@@ -3,6 +3,9 @@ Changelog
 
 ## head
 
+## 3.0.2 2016-01-13
+*   reduce memory allocations
+
 ## 3.0.1 2016-01-01
 *   documentation typo fixes
 *   fix possible race condition with `buffered_sender` send/close.
