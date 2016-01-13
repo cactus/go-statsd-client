@@ -13,6 +13,8 @@ import "time"
 // packet sending. Note that if you send lots of metrics, you will send more
 // often. This is just a maximal threshold.
 //
+// If flushInterval is 0ms, defaults to 300ms.
+//
 // flushBytes specifies the maximum udp packet size you wish to send. If adding
 // a metric would result in a larger packet than flushBytes, the packet will
 // first be send, then the new data will be added to the next packet.

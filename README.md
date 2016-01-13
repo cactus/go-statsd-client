@@ -23,7 +23,13 @@ import (
 
 func main() {
     // first create a client
+    // The basic client sends one stat per packet (for compatibility).
     client, err := statsd.NewClient("127.0.0.1:8125", "test-client")
+
+    // A buffered client, which sends multiple stats in one packet, is
+    // recommended when your server supports it (better performance).
+    // client, err := statsd.NewBufferedClient("127.0.0.1:8125", "test-client", 300 * time.Millisecond, 0)
+
     // handle any errors
     if err != nil {
         log.Fatal(err)
