@@ -12,7 +12,7 @@ type bufferPool struct {
 func newBufferPool() *bufferPool {
 	return &bufferPool{
 		&sync.Pool{New: func() interface{} {
-			return &bytes.Buffer{}
+			return bytes.NewBuffer(make([]byte, 0, 1500))
 		}},
 	}
 }
