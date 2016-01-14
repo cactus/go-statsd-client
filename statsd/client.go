@@ -97,12 +97,11 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 	}
 
 	// if negative, the submit formatter will prefix with a - already
-	// so in that case, use an empty prefix here.
-	symbol := ""
+	// so only special case the positive value
 	if value >= 0 {
-		symbol = "+"
+		return s.submit(stat, "+", value, "|g", rate)
 	}
-	return s.submit(stat, symbol, value, "|g", rate)
+	return s.submit(stat, "", value, "|g", rate)
 }
 
 // Submits a statsd timing type.
