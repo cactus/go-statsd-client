@@ -13,39 +13,46 @@ type BufferedSender struct {
 	flushBytes    int
 	flushInterval time.Duration
 	sender        Sender
-	buffer        *bytes.Buffer
-	reqs          chan *bytes.Buffer
-	shutdown      chan chan error
-	running       bool
-	mx            sync.RWMutex
-	pool          *bufferPool
+	// lifecycle
+	shutdown chan chan error
+	running  bool
+	runmx    sync.RWMutex
+	// buffers
+	bufmx  sync.Mutex
+	buffer *bytes.Buffer
+	bufs   chan *bytes.Buffer
+	pool   *bufferPool
 }
 
 // Send bytes.
 func (s *BufferedSender) Send(data []byte) (int, error) {
-	s.mx.RLock()
-	defer s.mx.RUnlock()
+	s.runmx.RLock()
+	defer s.runmx.RUnlock()
 	if !s.running {
 		return 0, fmt.Errorf("BufferedSender is not running")
 	}
 
-	// copy bytes, because the caller may mutate the slice (and the underlying
-	// array) after we return, since we may not end up sending right away.
-	b := s.pool.Get()
-	dlen, err := b.Write(data)
-	if err != nil {
-		return dlen, err
-	}
+	s.withBufferLock(func() {
+		blen := s.buffer.Len()
+		if blen > 0 && blen+len(data)+1 >= s.flushBytes {
+			s.swapnqueue()
+		}
 
-	s.reqs <- b
-	return dlen, nil
+		s.buffer.Write(data)
+		s.buffer.WriteByte('\n')
+
+		if s.buffer.Len() >= s.flushBytes {
+			s.swapnqueue()
+		}
+	})
+	return len(data), nil
 }
 
 // Close Buffered Sender
 func (s *BufferedSender) Close() error {
 	// since we are running, write lock during cleanup
-	s.mx.Lock()
-	defer s.mx.Unlock()
+	s.runmx.Lock()
+	defer s.runmx.Unlock()
 	if !s.running {
 		return nil
 	}
@@ -60,67 +67,67 @@ func (s *BufferedSender) Close() error {
 // Begins ticker and read loop
 func (s *BufferedSender) Start() {
 	// write lock to start running
-	s.mx.Lock()
-	defer s.mx.Unlock()
+	s.runmx.Lock()
+	defer s.runmx.Unlock()
 	if s.running {
 		return
 	}
 
 	s.running = true
-	s.reqs = make(chan *bytes.Buffer, 8)
+	s.bufs = make(chan *bytes.Buffer, 32)
 	go s.run()
+}
+
+func (s *BufferedSender) withBufferLock(fn func()) {
+	s.bufmx.Lock()
+	defer s.bufmx.Unlock()
+	fn()
+}
+
+func (s *BufferedSender) swapnqueue() {
+	if s.buffer.Len() == 0 {
+		return
+	}
+	ob := s.buffer
+	s.buffer = s.pool.Get()
+	s.bufs <- ob
 }
 
 func (s *BufferedSender) run() {
 	ticker := time.NewTicker(s.flushInterval)
 	defer ticker.Stop()
 
+	doneChan := make(chan bool)
+	go func() {
+		for buf := range s.bufs {
+			s.flush(buf)
+			s.pool.Put(buf)
+		}
+		doneChan <- true
+	}()
+
 	for {
 		select {
 		case <-ticker.C:
-			if s.buffer.Len() > 0 {
-				s.flush()
-			}
-		case req := <-s.reqs:
-			// StatsD supports receiving multiple metrics in a single packet by
-			// separating them with a newline.
-			if s.buffer.Len()+req.Len()+1 > s.flushBytes {
-				s.flush()
-			}
-			req.WriteTo(s.buffer)
-			s.pool.Put(req)
-			s.buffer.WriteByte('\n')
-
-			// if we happen to fill up the buffer, just flush right away
-			// instead of waiting for next input.
-			if s.buffer.Len() >= s.flushBytes {
-				s.flush()
-			}
+			s.withBufferLock(func() {
+				s.swapnqueue()
+			})
 		case errChan := <-s.shutdown:
-			close(s.reqs)
-			for req := range s.reqs {
-				if s.buffer.Len()+req.Len()+1 > s.flushBytes {
-					s.flush()
-				}
-				req.WriteTo(s.buffer)
-				s.pool.Put(req)
-				s.buffer.WriteByte('\n')
-			}
-
-			if s.buffer.Len() > 0 {
-				s.flush()
-			}
+			s.withBufferLock(func() {
+				s.swapnqueue()
+			})
+			close(s.bufs)
+			<-doneChan
 			errChan <- s.sender.Close()
 			return
 		}
 	}
-
 }
 
-// flush the buffer/send to remove endpoint.
-func (s *BufferedSender) flush() (int, error) {
-	n, err := s.sender.Send(bytes.TrimSuffix(s.buffer.Bytes(), []byte("\n")))
-	s.buffer.Reset() // clear the buffer
+// send to remove endpoint and truncate buffer
+func (s *BufferedSender) flush(b *bytes.Buffer) (int, error) {
+	n, err := s.sender.Send(bytes.TrimSuffix(b.Bytes(), []byte("\n")))
+	b.Truncate(0) // clear the buffer
 	return n, err
 }
 
