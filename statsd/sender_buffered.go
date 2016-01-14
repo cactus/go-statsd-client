@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var senderPool = newBufferPool()
+
 // BufferedSender provides a buffered statsd udp, sending multiple
 // metrics, where possible.
 type BufferedSender struct {
@@ -21,7 +23,6 @@ type BufferedSender struct {
 	bufmx  sync.Mutex
 	buffer *bytes.Buffer
 	bufs   chan *bytes.Buffer
-	pool   *bufferPool
 }
 
 // Send bytes.
@@ -89,7 +90,8 @@ func (s *BufferedSender) swapnqueue() {
 		return
 	}
 	ob := s.buffer
-	s.buffer = s.pool.Get()
+	nb := senderPool.Get()
+	s.buffer = nb
 	s.bufs <- ob
 }
 
@@ -101,7 +103,7 @@ func (s *BufferedSender) run() {
 	go func() {
 		for buf := range s.bufs {
 			s.flush(buf)
-			s.pool.Put(buf)
+			senderPool.Put(buf)
 		}
 		doneChan <- true
 	}()
@@ -155,7 +157,6 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 		sender:        simpleSender,
 		buffer:        bytes.NewBuffer(make([]byte, 0, flushBytes)),
 		shutdown:      make(chan chan error),
-		pool:          newBufferPool(),
 	}
 
 	sender.Start()
