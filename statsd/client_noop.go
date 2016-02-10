@@ -2,10 +2,7 @@ package statsd
 
 import "time"
 
-type NoopClient struct {
-	// prefix for statsd name
-	prefix string
-}
+type NoopClient struct{}
 
 // Close closes the connection and cleans up.
 func (s *NoopClient) Close() error {
@@ -87,9 +84,7 @@ func (s *NoopClient) Raw(stat string, value string, rate float32) error {
 }
 
 // Sets/Updates the statsd client prefix
-func (s *NoopClient) SetPrefix(prefix string) {
-	s.prefix = prefix
-}
+func (s *NoopClient) SetPrefix(prefix string) {}
 
 // Returns a SubStatter with appended prefix
 func (s *NoopClient) NewSubStatter(prefix string) SubStatter {
@@ -101,8 +96,7 @@ func (s *NoopClient) NewSubStatter(prefix string) SubStatter {
 // Use variadic arguments to support identical format as NewClient, or a more
 // conventional no argument form.
 func NewNoopClient(a ...interface{}) (Statter, error) {
-	noopClient := &NoopClient{}
-	return noopClient, nil
+	return &NoopClient{}, nil
 }
 
 // Compatibility alias
