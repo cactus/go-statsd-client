@@ -31,7 +31,20 @@ type Statter interface {
 
 type SubStatter interface {
 	StatSender
+	SetSamplerFunc(SamplerFunc)
 	NewSubStatter(string) SubStatter
+}
+
+type SamplerFunc func(float32) bool
+
+func DefaultSampler(rate float32) bool {
+	if rate < 1 {
+		if rand.Float32() < rate {
+			return true
+		}
+		return false
+	}
+	return true
 }
 
 type Client struct {
@@ -39,6 +52,8 @@ type Client struct {
 	prefix string
 	// packet sender
 	sender Sender
+	// sampler method
+	sampler SamplerFunc
 }
 
 // Close closes the connection and cleans up.
@@ -165,6 +180,14 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 	return s.submit(stat, "", value, "", rate)
 }
 
+// Sets a sampler function to something other than the default
+// sampler is a function that determines whether the metric is
+// to be accepted, or discarded.
+// An example use case is for submitted pre-sampled metrics.
+func (s *Client) SetSamplerFunc(sampler SamplerFunc) {
+	s.sampler = sampler
+}
+
 // submit an already sampled raw stat
 func (s *Client) submit(stat, vprefix string, value interface{}, suffix string, rate float32) error {
 	data := bufPool.Get()
@@ -217,13 +240,13 @@ func (s *Client) includeStat(rate float32) bool {
 		return false
 	}
 
-	if rate < 1 {
-		if rand.Float32() < rate {
-			return true
-		}
-		return false
+	// test for nil in case someone builds their own
+	// client without calling new (result is nil sampler)
+	if s.sampler == nil {
+		return DefaultSampler(rate)
+	} else {
+		return s.sampler(rate)
 	}
-	return true
 }
 
 // Sets/Updates the statsd client prefix.
@@ -243,8 +266,9 @@ func (s *Client) NewSubStatter(prefix string) SubStatter {
 		subfix := dotprefix(prefix)
 
 		c = &Client{
-			prefix: s.prefix + subfix,
-			sender: s.sender,
+			prefix:  s.prefix + subfix,
+			sender:  s.sender,
+			sampler: s.sampler,
 		}
 	}
 	return c

@@ -91,6 +91,9 @@ func (s *NoopClient) NewSubStatter(prefix string) SubStatter {
 	return &NoopClient{}
 }
 
+// Sets the sampler function
+func (s *NoopClient) SetSamplerFunc(sampler SamplerFunc) {}
+
 // Returns a pointer to a new NoopClient, and an error (always nil, just
 // supplied to support api convention).
 // Use variadic arguments to support identical format as NewClient, or a more
