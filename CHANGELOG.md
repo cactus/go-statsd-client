@@ -2,6 +2,7 @@ Changelog
 =========
 
 ## head
+*   make sampler function tunable (GH-24)
 
 ## 3.0.2 2016-01-13
 *   reduce memory allocations
