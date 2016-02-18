@@ -2,6 +2,8 @@ Changelog
 =========
 
 ## head
+
+## 3.0.3 2016-02-18
 *   make sampler function tunable (GH-24)
 
 ## 3.0.2 2016-01-13
