@@ -43,17 +43,17 @@ func main() {
 	}
 
 	if opts.Nil && opts.Buffered {
-		fmt.Printf("Specifying both nil and buffered together is invalid")
+		fmt.Printf("Specifying both nil and buffered together is invalid\n")
 		os.Exit(1)
 	}
 
 	if opts.Name == "" || statsd.CheckName(opts.Name) != nil {
-		fmt.Printf("Stat name contains invalid characters")
+		fmt.Printf("Stat name contains invalid characters\n")
 		os.Exit(1)
 	}
 
 	if statsd.CheckName(opts.Prefix) != nil {
-		fmt.Printf("Stat prefix contains invalid characters")
+		fmt.Printf("Stat prefix contains invalid characters\n")
 		os.Exit(1)
 	}
 
@@ -99,13 +99,13 @@ func main() {
 			for x := 0; x < pertick; x++ {
 				err := stat(opts.Name, opts.StatValue, opts.Rate)
 				if err != nil {
-					log.Printf("Got Error: %+v", err)
+					log.Printf("Got Error: %+v\n", err)
 					break
 				}
 				count++
 			}
 		case <-ender:
-			log.Printf("%d events called", count)
+			log.Printf("%d events called\n", count)
 			os.Exit(0)
 			return
 		}
