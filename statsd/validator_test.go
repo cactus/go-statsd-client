@@ -19,7 +19,7 @@ var validatorTests = []struct {
 func TestValidator(t *testing.T) {
 	var err error
 	for _, tt := range validatorTests {
-		err = SafeNameValidator(tt.Stat)
+		err = CheckName(tt.Stat)
 		switch {
 		case err != nil && tt.Valid:
 			t.Fatal(err)
