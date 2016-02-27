@@ -20,14 +20,14 @@ func main() {
 	var opts struct {
 		HostPort  string        `long:"host" default:"127.0.0.1:8125" description:"host:port of statsd server"`
 		Prefix    string        `long:"prefix" default:"test-client" description:"Statsd prefix"`
-		StatType  string        `long:"type" default:"count" description:"stat type to send. Can be timing, count, guage"`
+		StatType  string        `long:"type" default:"count" description:"stat type to send. Can be one of: timing, count, guage"`
 		StatValue int64         `long:"value" default:"1" description:"Value to send"`
 		Name      string        `short:"n" long:"name" default:"counter" description:"stat name"`
 		Rate      float32       `short:"r" long:"rate" default:"1.0" description:"sample rate"`
 		Volume    int           `short:"c" long:"count" default:"1000" description:"Number of stats to send. Volume."`
-		Nil       bool          `long:"nil" default:"false" description:"Use nil client"`
-		Buffered  bool          `long:"buffered" default:"false" description:"Use a buffered client"`
-		Duration  time.Duration `short:"d" long:"duration" default:"10s" description:"How long to spread the volume across. Each second of duration volume/seconds events will be sent."`
+		Nil       bool          `long:"nil" description:"Use nil client"`
+		Buffered  bool          `long:"buffered" description:"Use a buffered client"`
+		Duration  time.Duration `short:"d" long:"duration" default:"10s" description:"How long to spread the volume across. For each second of duration, volume/seconds events will be sent."`
 	}
 
 	// parse said flags
@@ -43,7 +43,17 @@ func main() {
 	}
 
 	if opts.Nil && opts.Buffered {
-		fmt.Printf("Specifying both nil and buffered together is invalid.")
+		fmt.Printf("Specifying both nil and buffered together is invalid")
+		os.Exit(1)
+	}
+
+	if opts.Name == "" || statsd.CheckName(opts.Name) != nil {
+		fmt.Printf("Stat name contains invalid characters")
+		os.Exit(1)
+	}
+
+	if statsd.CheckName(opts.Prefix) != nil {
+		fmt.Printf("Stat prefix contains invalid characters")
 		os.Exit(1)
 	}
 
@@ -92,7 +102,7 @@ func main() {
 					log.Printf("Got Error: %+v", err)
 					break
 				}
-				count += 1
+				count++
 			}
 		case <-ender:
 			log.Printf("%d events called", count)
