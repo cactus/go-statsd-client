@@ -13,10 +13,10 @@ type ValidatorFunc func(string) error
 
 var safeName = regexp.MustCompile(`^[a-zA-Z0-9\-_.]+$`)
 
-// A stat name validator function. This function may be used to validate
-// whether a stat name contains invalid characters. If invalid
-// characters are found, the function will return an error.
-func SafeNameValidator(stat string) error {
+// CheckName may be used to validate whether a stat name contains invalid
+// characters. If invalid characters are found, the function will return an
+// error.
+func CheckName(stat string) error {
 	if !safeName.MatchString(stat) {
 		return fmt.Errorf("invalid stat name: %s", stat)
 	}
