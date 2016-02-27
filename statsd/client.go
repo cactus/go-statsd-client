@@ -32,6 +32,7 @@ type Statter interface {
 	StatSender
 	NewSubStatter(string) SubStatter
 	SetPrefix(string)
+	SetValidatorFunc(ValidatorFunc)
 	Close() error
 }
 
@@ -65,6 +66,8 @@ type Client struct {
 	sender Sender
 	// sampler method
 	sampler SamplerFunc
+	// stat name validator method
+	validator ValidatorFunc
 }
 
 // Close closes the connection and cleans up.
@@ -199,10 +202,30 @@ func (s *Client) SetSamplerFunc(sampler SamplerFunc) {
 	s.sampler = sampler
 }
 
+// SetValidatorFunc is used to set a function that validates
+// whether a stat name contains invalid characters. If invalid
+// characters are found, stat methods will return an error. For
+// performance reasons, this only occurs *after sampling*.
+// The default validator is nil, which means no validation. It is
+// up to the integrator to decide if the performance overhead of name
+// validation is worth it.
+// To remove a previously set validation function, simply call set with
+// nil.
+func (s *Client) SetValidatorFunc(validator ValidatorFunc) {
+	s.validator = validator
+}
+
 // submit an already sampled raw stat
 func (s *Client) submit(stat, vprefix string, value interface{}, suffix string, rate float32) error {
 	data := bufPool.Get()
 	defer bufPool.Put(data)
+
+	if s.validator != nil {
+		err := s.validator(stat)
+		if err != nil {
+			return err
+		}
+	}
 
 	if s.prefix != "" {
 		data.WriteString(s.prefix)
@@ -276,9 +299,10 @@ func (s *Client) NewSubStatter(prefix string) SubStatter {
 		subfix := dotprefix(prefix)
 
 		c = &Client{
-			prefix:  s.prefix + subfix,
-			sender:  s.sender,
-			sampler: s.sampler,
+			prefix:    s.prefix + subfix,
+			sender:    s.sender,
+			sampler:   s.sampler,
+			validator: s.validator,
 		}
 	}
 	return c

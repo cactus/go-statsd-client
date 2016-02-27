@@ -99,6 +99,9 @@ func (s *NoopClient) NewSubStatter(prefix string) SubStatter {
 // SetSamplerFunc sets the sampler function
 func (s *NoopClient) SetSamplerFunc(sampler SamplerFunc) {}
 
+// Sets the validator function
+func (s *NoopClient) SetValidatorFunc(validator ValidatorFunc) {}
+
 // NewNoopClient returns a pointer to a new NoopClient, and an error (always
 // nil, just supplied to support api convention).
 // Use variadic arguments to support identical format as NewClient, or a more
