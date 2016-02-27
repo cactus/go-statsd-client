@@ -14,6 +14,7 @@ import (
 
 var bufPool = newBufferPool()
 
+// The StatSender interface wraps all the statsd metric methods
 type StatSender interface {
 	Inc(string, int64, float32) error
 	Dec(string, int64, float32) error
@@ -26,6 +27,7 @@ type StatSender interface {
 	Raw(string, string, float32) error
 }
 
+// The Statter interface defines the behavior of a stat client
 type Statter interface {
 	StatSender
 	NewSubStatter(string) SubStatter
@@ -33,14 +35,18 @@ type Statter interface {
 	Close() error
 }
 
+// The SubStatter interface defines the behavior of a stat child/subclient
 type SubStatter interface {
 	StatSender
 	SetSamplerFunc(SamplerFunc)
 	NewSubStatter(string) SubStatter
 }
 
+// The SamplerFunc type defines a function that can serve
+// as a Client sampler function.
 type SamplerFunc func(float32) bool
 
+// DefaultSampler is the default rate sampler function
 func DefaultSampler(rate float32) bool {
 	if rate < 1 {
 		if rand.Float32() < rate {
@@ -51,6 +57,7 @@ func DefaultSampler(rate float32) bool {
 	return true
 }
 
+// A Client is a statsd client.
 type Client struct {
 	// prefix for statsd name
 	prefix string
@@ -70,7 +77,7 @@ func (s *Client) Close() error {
 	return err
 }
 
-// Increments a statsd count type.
+// Inc increments a statsd count type.
 // stat is a string name for the metric.
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0)
@@ -82,7 +89,7 @@ func (s *Client) Inc(stat string, value int64, rate float32) error {
 	return s.submit(stat, "", value, "|c", rate)
 }
 
-// Decrements a statsd count type.
+// Dec decrements a statsd count type.
 // stat is a string name for the metric.
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
@@ -94,7 +101,7 @@ func (s *Client) Dec(stat string, value int64, rate float32) error {
 	return s.submit(stat, "", -value, "|c", rate)
 }
 
-// Submits/Updates a statsd gauge type.
+// Gauge submits/updates a statsd gauge type.
 // stat is a string name for the metric.
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
@@ -106,7 +113,7 @@ func (s *Client) Gauge(stat string, value int64, rate float32) error {
 	return s.submit(stat, "", value, "|g", rate)
 }
 
-// Submits a delta to a statsd gauge.
+// GaugeDelta submits a delta to a statsd gauge.
 // stat is the string name for the metric.
 // value is the (positive or negative) change.
 // rate is the sample rate (0.0 to 1.0).
@@ -123,7 +130,7 @@ func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
 	return s.submit(stat, "", value, "|g", rate)
 }
 
-// Submits a statsd timing type.
+// Timing submits a statsd timing type.
 // stat is a string name for the metric.
 // delta is the time duration value in milliseconds
 // rate is the sample rate (0.0 to 1.0).
@@ -135,7 +142,7 @@ func (s *Client) Timing(stat string, delta int64, rate float32) error {
 	return s.submit(stat, "", delta, "|ms", rate)
 }
 
-// Submits a statsd timing type.
+// TimingDuration submits a statsd timing type.
 // stat is a string name for the metric.
 // delta is the timing value as time.Duration
 // rate is the sample rate (0.0 to 1.0).
@@ -148,7 +155,7 @@ func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) 
 	return s.submit(stat, "", ms, "|ms", rate)
 }
 
-// Submits a stats set type
+// Set submits a stats set type
 // stat is a string name for the metric.
 // value is the string value
 // rate is the sample rate (0.0 to 1.0).
@@ -160,7 +167,7 @@ func (s *Client) Set(stat string, value string, rate float32) error {
 	return s.submit(stat, "", value, "|s", rate)
 }
 
-// Submits a number as a stats set type.
+// SetInt submits a number as a stats set type.
 // stat is a string name for the metric.
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0).
@@ -184,7 +191,7 @@ func (s *Client) Raw(stat string, value string, rate float32) error {
 	return s.submit(stat, "", value, "", rate)
 }
 
-// Sets a sampler function to something other than the default
+// SetSamplerFunc sets a sampler function to something other than the default
 // sampler is a function that determines whether the metric is
 // to be accepted, or discarded.
 // An example use case is for submitted pre-sampled metrics.
@@ -246,14 +253,13 @@ func (s *Client) includeStat(rate float32) bool {
 
 	// test for nil in case someone builds their own
 	// client without calling new (result is nil sampler)
-	if s.sampler == nil {
-		return DefaultSampler(rate)
-	} else {
+	if s.sampler != nil {
 		return s.sampler(rate)
 	}
+	return DefaultSampler(rate)
 }
 
-// Sets/Updates the statsd client prefix.
+// SetPrefix sets/updates the statsd client prefix.
 // Note: Does not change the prefix of any SubStatters.
 func (s *Client) SetPrefix(prefix string) {
 	if s == nil {
@@ -263,7 +269,7 @@ func (s *Client) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
 
-// Returns a SubStatter with appended prefix
+// NewSubStatter returns a SubStatter with appended prefix
 func (s *Client) NewSubStatter(prefix string) SubStatter {
 	var c *Client
 	if s != nil {
@@ -278,7 +284,7 @@ func (s *Client) NewSubStatter(prefix string) SubStatter {
 	return c
 }
 
-// Returns a pointer to a new Client, and an error.
+// NewClient returns a pointer to a new Client, and an error.
 //
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
@@ -307,6 +313,8 @@ func dotprefix(prefix string) string {
 	return prefix
 }
 
-// Compatibility aliases
-var Dial = New
+// Dial is a compatibility alias for NewClient
+var Dial = NewClient
+
+// New is a compatibility alias for NewClient
 var New = NewClient

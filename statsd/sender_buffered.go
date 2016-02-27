@@ -137,7 +137,7 @@ func (s *BufferedSender) flush(b *bytes.Buffer) (int, error) {
 	return n, err
 }
 
-// Returns a new BufferedSender
+// NewBufferedSender returns a new BufferedSender
 //
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.

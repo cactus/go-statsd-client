@@ -9,6 +9,8 @@ import (
 	"regexp"
 )
 
+// The ValidatorFunc type defines a function that can serve
+// as a stat name validation function.
 type ValidatorFunc func(string) error
 
 var safeName = regexp.MustCompile(`^[a-zA-Z0-9\-_.]+$`)
