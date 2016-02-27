@@ -42,7 +42,8 @@ func main() {
 }
 ```
 
-See [docs][2] for more info.
+See [docs][2] for more info. There is some example code in the `test-client`
+directory.
 
 ## Contributors
 
