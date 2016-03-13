@@ -35,6 +35,8 @@ var statsdSubStatterPacketTests = []struct {
 	{"test", "sub", "GaugeDelta", "gauge", int64(-1), 1.0, "test.sub.gauge:-1|g"},
 	// empty sub prefix -- note: not used in subsub tests
 	{"test", "", "Inc", "count", int64(1), 1.0, "test.count:1|c"},
+	// empty base prefix
+	{"", "sub", "Inc", "count", int64(1), 1.0, "sub.count:1|c"},
 }
 
 func TestSubStatterClient(t *testing.T) {
