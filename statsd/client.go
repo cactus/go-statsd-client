@@ -270,13 +270,13 @@ func (s *Client) SetPrefix(prefix string) {
 }
 
 // NewSubStatter returns a SubStatter with appended prefix
-func (s *Client) NewSubStatter(prefix string) SubStatter {
+func (s *Client) NewSubStatter(newScope string) SubStatter {
 	var c *Client
 	if s != nil {
-		subfix := dotprefix(prefix)
+		newScope := dotsuffix(s.prefix, newScope)
 
 		c = &Client{
-			prefix:  s.prefix + subfix,
+			prefix:  s.prefix + newScope,
 			sender:  s.sender,
 			sampler: s.sampler,
 		}
@@ -305,12 +305,19 @@ func NewClient(addr, prefix string) (Statter, error) {
 }
 
 // helper method to ensure a dot is added only when necessary
-func dotprefix(prefix string) string {
-	if prefix != "" && !strings.HasPrefix(prefix, ".") {
-		return "." + prefix
+func dotsuffix(curPrefix, suffix string) string {
+	var (
+		emptyBase      = curPrefix == ""
+		baseHasDot     = strings.HasSuffix(curPrefix, ".")
+		emptySuffix    = suffix == ""
+		suffixLeadsDot = strings.HasPrefix(suffix, ".")
+	)
+
+	if !emptyBase && !baseHasDot && !suffixLeadsDot && !emptySuffix {
+		return "." + suffix
 	}
 
-	return prefix
+	return suffix
 }
 
 // Dial is a compatibility alias for NewClient
