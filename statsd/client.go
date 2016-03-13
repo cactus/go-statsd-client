@@ -269,14 +269,13 @@ func (s *Client) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
 
-// NewSubStatter returns a SubStatter with appended prefix
+// NewSubStatter returns a SubStatter with an updated prefix that equals the
+// old prefix with 'newScope' appended.
 func (s *Client) NewSubStatter(newScope string) SubStatter {
 	var c *Client
 	if s != nil {
-		newScope := dotsuffix(s.prefix, newScope)
-
 		c = &Client{
-			prefix:  s.prefix + newScope,
+			prefix:  joinscopes(s.prefix, newScope),
 			sender:  s.sender,
 			sampler: s.sampler,
 		}
@@ -304,8 +303,12 @@ func NewClient(addr, prefix string) (Statter, error) {
 	return client, nil
 }
 
-// helper method to ensure a dot is added only when necessary
-func dotsuffix(curPrefix, suffix string) string {
+// joinscopes is a helper that ensures we combine scopes with a dot when
+// it's appropriate to do so. Specifically this looks for trailing dots on
+// the existing prefix and leading dots on the new suffix.
+//
+// It returns the new prefix.
+func joinscopes(curPrefix, suffix string) string {
 	var (
 		emptyBase      = curPrefix == ""
 		baseHasDot     = strings.HasSuffix(curPrefix, ".")
@@ -314,10 +317,10 @@ func dotsuffix(curPrefix, suffix string) string {
 	)
 
 	if !emptyBase && !baseHasDot && !suffixLeadsDot && !emptySuffix {
-		return "." + suffix
+		return curPrefix + "." + suffix
 	}
 
-	return suffix
+	return curPrefix + suffix
 }
 
 // Dial is a compatibility alias for NewClient
