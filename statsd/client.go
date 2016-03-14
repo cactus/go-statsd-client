@@ -269,13 +269,12 @@ func (s *Client) SetPrefix(prefix string) {
 	s.prefix = prefix
 }
 
-// NewSubStatter returns a SubStatter with an updated prefix that equals the
-// old prefix with 'newScope' appended.
-func (s *Client) NewSubStatter(newScope string) SubStatter {
+// NewSubStatter returns a SubStatter with appended prefix
+func (s *Client) NewSubStatter(prefix string) SubStatter {
 	var c *Client
 	if s != nil {
 		c = &Client{
-			prefix:  joinscopes(s.prefix, newScope),
+			prefix:  joinPathComp(s.prefix, prefix),
 			sender:  s.sender,
 			sampler: s.sampler,
 		}
@@ -303,24 +302,17 @@ func NewClient(addr, prefix string) (Statter, error) {
 	return client, nil
 }
 
-// joinscopes is a helper that ensures we combine scopes with a dot when
-// it's appropriate to do so. Specifically this looks for trailing dots on
-// the existing prefix and leading dots on the new suffix.
+// joinPathComp is a helper that ensures we combine path components with a dot
+// when it's appropriate to do so; prefix is the existing prefix and suffix is
+// the new component being added.
 //
-// It returns the new prefix.
-func joinscopes(curPrefix, suffix string) string {
-	var (
-		emptyBase      = curPrefix == ""
-		baseHasDot     = strings.HasSuffix(curPrefix, ".")
-		emptySuffix    = suffix == ""
-		suffixLeadsDot = strings.HasPrefix(suffix, ".")
-	)
-
-	if !emptyBase && !baseHasDot && !suffixLeadsDot && !emptySuffix {
-		return curPrefix + "." + suffix
+// It returns the joined prefix.
+func joinPathComp(prefix, suffix string) string {
+	suffix = strings.TrimLeft(suffix, ".")
+	if prefix != "" && suffix != "" {
+		return prefix + "." + suffix
 	}
-
-	return curPrefix + suffix
+	return prefix + suffix
 }
 
 // Dial is a compatibility alias for NewClient
