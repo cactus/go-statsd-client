@@ -29,8 +29,7 @@ type StatSender interface {
 
 // The Statter interface defines the behavior of a stat client
 type Statter interface {
-	StatSender
-	NewSubStatter(string) SubStatter
+	SubStatter
 	SetPrefix(string)
 	Close() error
 }
