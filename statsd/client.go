@@ -294,12 +294,14 @@ func NewClient(addr, prefix string) (Statter, error) {
 		return nil, err
 	}
 
+	return NewClientWithSender(sender, prefix), nil
+}
+
+func NewClientWithSender(sender Sender, prefix string) Statter {
 	client := &Client{
 		prefix: prefix,
 		sender: sender,
 	}
-
-	return client, nil
 }
 
 // joinPathComp is a helper that ensures we combine path components with a dot
