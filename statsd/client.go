@@ -295,7 +295,7 @@ func NewClient(addr, prefix string) (Statter, error) {
 		return nil, err
 	}
 
-	return NewClientWithSender(sender, prefix), nil
+	return NewClientWithSender(sender, prefix)
 }
 
 // NewClientWithSender returns a pointer to a new Client and an error.
@@ -305,13 +305,10 @@ func NewClient(addr, prefix string) (Statter, error) {
 // prefix is the stastd client prefix. Can be "" if no prefix is desired.
 func NewClientWithSender(sender Sender, prefix string) (Statter, error) {
 	if sender == nil {
-		return errors.New("Client sender may not be nil")
+		return nil, errors.New("Client sender may not be nil")
 	}
 
-	return &Client{
-		prefix: prefix,
-		sender: sender,
-	}
+	return &Client{prefix: prefix, sender: sender}, nil
 }
 
 // joinPathComp is a helper that ensures we combine path components with a dot
