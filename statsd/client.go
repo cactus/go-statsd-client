@@ -5,6 +5,7 @@
 package statsd
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -297,7 +298,16 @@ func NewClient(addr, prefix string) (Statter, error) {
 	return NewClientWithSender(sender, prefix), nil
 }
 
-func NewClientWithSender(sender Sender, prefix string) Statter {
+// NewClientWithSender returns a pointer to a new Client and an error.
+//
+// sender is an instance of a statsd.Sender interface and may not be nil
+//
+// prefix is the stastd client prefix. Can be "" if no prefix is desired.
+func NewClientWithSender(sender Sender, prefix string) (Statter, error) {
+	if sender == nil {
+		return errors.New("Client sender may not be nil")
+	}
+
 	return &Client{
 		prefix: prefix,
 		sender: sender,
