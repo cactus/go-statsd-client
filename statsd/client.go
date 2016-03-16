@@ -298,7 +298,7 @@ func NewClient(addr, prefix string) (Statter, error) {
 }
 
 func NewClientWithSender(sender Sender, prefix string) Statter {
-	client := &Client{
+	return &Client{
 		prefix: prefix,
 		sender: sender,
 	}
