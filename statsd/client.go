@@ -294,7 +294,7 @@ func NewClient(addr, prefix string) (Statter, error) {
 		return nil, err
 	}
 
-	return NewClientWithSender(sender, prefix)
+	return &Client{prefix: prefix, sender: sender}, nil
 }
 
 // NewClientWithSender returns a pointer to a new Client and an error.
