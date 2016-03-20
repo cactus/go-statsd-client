@@ -2,6 +2,8 @@ Changelog
 =========
 
 ## head
+*   `NewClientWithSender(Sender, string) (Statter, error)` method added to
+    enable building a Client from a prefix and an already created Sender.
 
 ## 3.0.3 2016-02-18
 *   make sampler function tunable (GH-24)
@@ -9,7 +11,6 @@ Changelog
 ## 3.0.2 2016-01-13
 *   reduce memory allocations
 *   improve performance of buffered clients
-
 
 ## 3.0.1 2016-01-01
 *   documentation typo fixes
