@@ -5,7 +5,6 @@
 package statsd
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"strconv"
@@ -305,7 +304,7 @@ func NewClient(addr, prefix string) (Statter, error) {
 // prefix is the stastd client prefix. Can be "" if no prefix is desired.
 func NewClientWithSender(sender Sender, prefix string) (Statter, error) {
 	if sender == nil {
-		return nil, errors.New("Client sender may not be nil")
+		return nil, fmt.Errorf("Client sender may not be nil")
 	}
 
 	return &Client{prefix: prefix, sender: sender}, nil
