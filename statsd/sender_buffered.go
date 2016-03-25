@@ -16,17 +16,17 @@ var senderPool = newBufferPool()
 // BufferedSender provides a buffered statsd udp, sending multiple
 // metrics, where possible.
 type BufferedSender struct {
+	sender        Sender
 	flushBytes    int
 	flushInterval time.Duration
-	sender        Sender
-	// lifecycle
-	shutdown chan chan error
-	running  bool
-	runmx    sync.RWMutex
 	// buffers
 	bufmx  sync.Mutex
 	buffer *bytes.Buffer
 	bufs   chan *bytes.Buffer
+	// lifecycle
+	runmx    sync.RWMutex
+	shutdown chan chan error
+	running  bool
 }
 
 // Send bytes.
