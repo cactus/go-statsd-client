@@ -4,6 +4,7 @@ Changelog
 ## head
 *   `NewClientWithSender(Sender, string) (Statter, error)` method added to
     enable building a Client from a prefix and an already created Sender.
+*   Add stat recording sender (useful for testing) (GH-32)
 
 ## 3.0.3 2016-02-18
 *   make sampler function tunable (GH-24)
