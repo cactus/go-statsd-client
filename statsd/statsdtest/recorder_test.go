@@ -36,9 +36,8 @@ func TestRecordingSender(t *testing.T) {
 
 	sent := rs.GetSent()
 	if len(sent) != 4 {
-		t.Errorf("Did not capture all stats sent; got: %s", sent)
 		// just dive out because everything else relies on ordering
-		return
+		t.Fatalf("Did not capture all stats sent; got: %s", sent)
 	}
 
 	ms := float64(d) / float64(time.Millisecond)

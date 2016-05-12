@@ -1,6 +1,10 @@
 package statsdtest
 
-import "bytes"
+import (
+	"bytes"
+	"fmt"
+	"strings"
+)
 
 // Stat contains the raw and extracted stat information from a stat that was
 // sent by the RecordingSender. Raw will always have the content that was
@@ -15,6 +19,11 @@ type Stat struct {
 	Parsed bool
 }
 
+// String fulfils the stringer interface
+func (s *Stat) String() string {
+	return fmt.Sprintf("%s %s %s", s.Stat, s.Value, s.Rate)
+}
+
 // ParseStats takes a sequence of bytes destined for a Statsd server and parses
 // it out into one or more Stat structs. Each struct includes both the raw
 // bytes (copied, so the src []byte may be reused if desired) as well as each
@@ -25,7 +34,7 @@ func ParseStats(src []byte) Stats {
 	for i, b := range src {
 		d[i] = b
 	}
-	// standard protocal indicates one stat per line
+	// standard protocol indicates one stat per line
 	entries := bytes.Split(d, []byte{'\n'})
 
 	result := make(Stats, len(entries))
@@ -71,6 +80,7 @@ func ParseStats(src []byte) Stats {
 	return result
 }
 
+// Stats is a slice of Stat
 type Stats []Stat
 
 // Unparsed returns any stats that were unable to be completely parsed.
@@ -114,4 +124,17 @@ func (s Stats) Values() []string {
 		r[i] = e.Value
 	}
 	return r
+}
+
+// String fulfils the stringer interface
+func (s Stats) String() string {
+	if len(s) == 0 {
+		return ""
+	}
+
+	r := make([]string, len(s))
+	for i, e := range s {
+		r[i] = e.String()
+	}
+	return strings.Join(r, "\n")
 }
