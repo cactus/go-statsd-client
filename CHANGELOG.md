@@ -3,7 +3,7 @@ Changelog
 
 ## head
 
-## 2016-05-30
+## v3.1.0 2016-05-30
 *   `NewClientWithSender(Sender, string) (Statter, error)` method added to
     enable building a Client from a prefix and an already created Sender.
 *   Add stat recording sender in submodule statsdtest (GH-32).
