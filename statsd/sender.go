@@ -56,6 +56,7 @@ func NewSimpleSender(addr string) (Sender, error) {
 
 	ra, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
+		c.Close()
 		return nil, err
 	}
 
