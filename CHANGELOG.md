@@ -2,6 +2,7 @@ Changelog
 =========
 
 ## head
+*   Fix leak on sender create with unresolvable destination (GH-34).
 
 ## v3.1.0 2016-05-30
 *   `NewClientWithSender(Sender, string) (Statter, error)` method added to
