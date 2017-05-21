@@ -32,8 +32,8 @@ type BufferedSender struct {
 // Send bytes.
 func (s *BufferedSender) Send(data []byte) (int, error) {
 	s.runmx.RLock()
-	defer s.runmx.RUnlock()
 	if !s.running {
+		s.runmx.RUnlock()
 		return 0, fmt.Errorf("BufferedSender is not running")
 	}
 
@@ -50,6 +50,7 @@ func (s *BufferedSender) Send(data []byte) (int, error) {
 			s.swapnqueue()
 		}
 	})
+	s.runmx.RUnlock()
 	return len(data), nil
 }
 
@@ -85,8 +86,8 @@ func (s *BufferedSender) Start() {
 
 func (s *BufferedSender) withBufferLock(fn func()) {
 	s.bufmx.Lock()
-	defer s.bufmx.Unlock()
 	fn()
+	s.bufmx.Unlock()
 }
 
 func (s *BufferedSender) swapnqueue() {
