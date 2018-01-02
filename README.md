@@ -4,7 +4,7 @@ go-statsd-client
 [![Build Status](https://travis-ci.org/cactus/go-statsd-client.png?branch=master)](https://travis-ci.org/cactus/go-statsd-client)
 [![GoDoc](https://godoc.org/github.com/cactus/go-statsd-client/statsd?status.png)](https://godoc.org/github.com/cactus/go-statsd-client/statsd)
 [![Go Report Card](https://goreportcard.com/badge/cactus/go-statsd-client)](https://goreportcard.com/report/cactus/go-statsd-client)
-
+[![License](https://img.shields.io/github/license/cactus/go-statsd-client.svg)](https://github.com/cactus/go-statsd-client/blob/master/LICENSE.md)
 
 ## About
 
