@@ -49,10 +49,7 @@ type SamplerFunc func(float32) bool
 // DefaultSampler is the default rate sampler function
 func DefaultSampler(rate float32) bool {
 	if rate < 1 {
-		if rand.Float32() < rate {
-			return true
-		}
-		return false
+		return rand.Float32() < rate
 	}
 	return true
 }

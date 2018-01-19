@@ -33,9 +33,7 @@ func (rs *RecordingSender) GetSent() Stats {
 	for i, e := range rs.buffer {
 		results[i] = e
 		results[i].Raw = make([]byte, len(e.Raw))
-		for j, b := range e.Raw {
-			results[i].Raw[j] = b
-		}
+		copy(results[i].Raw, e.Raw)
 	}
 
 	return results

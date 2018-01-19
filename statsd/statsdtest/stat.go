@@ -31,9 +31,8 @@ func (s *Stat) String() string {
 // will be set to false but no error is returned / kept.
 func ParseStats(src []byte) Stats {
 	d := make([]byte, len(src))
-	for i, b := range src {
-		d[i] = b
-	}
+	copy(d, src)
+
 	// standard protocol indicates one stat per line
 	entries := bytes.Split(d, []byte{'\n'})
 

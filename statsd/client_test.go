@@ -74,7 +74,7 @@ func TestClient(t *testing.T) {
 		}
 
 		data = bytes.TrimRight(data, "\x00")
-		if bytes.Equal(data, []byte(tt.Expected)) != true {
+		if !bytes.Equal(data, []byte(tt.Expected)) {
 			c.Close()
 			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
 		}

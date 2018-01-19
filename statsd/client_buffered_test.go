@@ -50,7 +50,7 @@ func TestBufferedClientFlushSize(t *testing.T) {
 		}
 
 		data = bytes.TrimRight(data, "\x00\n")
-		if bytes.Equal(data, []byte(tt.Expected)) != true {
+		if !bytes.Equal(data, []byte(tt.Expected)) {
 			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
 		}
 		c.Close()
@@ -95,7 +95,7 @@ func TestBufferedClientFlushTime(t *testing.T) {
 		}
 
 		data = bytes.TrimRight(data, "\x00\n")
-		if bytes.Equal(data, []byte(tt.Expected)) != true {
+		if !bytes.Equal(data, []byte(tt.Expected)) {
 			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
 		}
 		c.Close()
@@ -148,7 +148,7 @@ func TestBufferedClientBigPacket(t *testing.T) {
 	}
 
 	data = bytes.TrimRight(data, "\x00")
-	if bytes.Equal(data, []byte(expected)) != true {
+	if !bytes.Equal(data, []byte(expected)) {
 		t.Fatalf("got '%s' expected '%s'", data, expected)
 	}
 }
@@ -177,7 +177,7 @@ func TestFlushOnClose(t *testing.T) {
 	}
 
 	data = bytes.TrimRight(data, "\x00")
-	if bytes.Equal(data, []byte(expected)) != true {
+	if !bytes.Equal(data, []byte(expected)) {
 		fmt.Println(data)
 		fmt.Println([]byte(expected))
 		t.Fatalf("got '%s' expected '%s'", data, expected)

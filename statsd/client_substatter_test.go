@@ -69,7 +69,7 @@ func TestSubStatterClient(t *testing.T) {
 		}
 
 		data = bytes.TrimRight(data, "\x00")
-		if bytes.Equal(data, []byte(tt.Expected)) != true {
+		if !bytes.Equal(data, []byte(tt.Expected)) {
 			c.Close()
 			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
 		}
@@ -119,14 +119,14 @@ func TestMultSubStatterClient(t *testing.T) {
 		}
 
 		expected := strings.Replace(tt.Expected, "sub.", "sub1.", -1)
-		if bytes.Equal(responses[0], []byte(expected)) != true {
+		if !bytes.Equal(responses[0], []byte(expected)) {
 			c.Close()
 			t.Fatalf("%s got '%s' expected '%s'",
 				tt.Method, responses[0], tt.Expected)
 		}
 
 		expected = strings.Replace(tt.Expected, "sub.", "sub2.", -1)
-		if bytes.Equal(responses[1], []byte(expected)) != true {
+		if !bytes.Equal(responses[1], []byte(expected)) {
 			c.Close()
 			t.Fatalf("%s got '%s' expected '%s'",
 				tt.Method, responses[1], tt.Expected)
@@ -171,7 +171,7 @@ func TestSubSubStatterClient(t *testing.T) {
 
 		data = bytes.TrimRight(data, "\x00")
 		expected := strings.Replace(tt.Expected, "sub.", "sub.sub2.", -1)
-		if bytes.Equal(data, []byte(expected)) != true {
+		if !bytes.Equal(data, []byte(expected)) {
 			c.Close()
 			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
 		}
