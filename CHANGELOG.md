@@ -2,6 +2,10 @@ Changelog
 =========
 
 ## head
+
+
+## 3.1.1 2018-01-19
+*   avoid some overhead by not using defer for two "hot" path funcs
 *   Fix leak on sender create with unresolvable destination (GH-34).
 
 ## v3.1.0 2016-05-30
