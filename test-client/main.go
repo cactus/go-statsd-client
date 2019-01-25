@@ -20,7 +20,7 @@ func main() {
 	var opts struct {
 		HostPort  string        `long:"host" default:"127.0.0.1:8125" description:"host:port of statsd server"`
 		Prefix    string        `long:"prefix" default:"test-client" description:"Statsd prefix"`
-		StatType  string        `long:"type" default:"count" description:"stat type to send. Can be one of: timing, count, guage"`
+		StatType  string        `long:"type" default:"count" description:"stat type to send. Can be one of: timing, count, gauge"`
 		StatValue int64         `long:"value" default:"1" description:"Value to send"`
 		Name      string        `short:"n" long:"name" default:"counter" description:"stat name"`
 		Rate      float32       `short:"r" long:"rate" default:"1.0" description:"sample rate"`
