@@ -187,7 +187,7 @@ func ExampleClient_noop() {
 	// make a NoopClient instead
 	if err != nil {
 		log.Println("Remote endpoint did not resolve. Disabling stats", err)
-		client, err = NewNoopClient()
+		client, _ = NewNoopClient()
 	}
 	// make sure to clean up
 	defer client.Close()
