@@ -54,7 +54,7 @@ func (s *BufferedSender) Send(data []byte) (int, error) {
 	return len(data), nil
 }
 
-// Close Buffered Sender
+// Close closes the Buffered Sender and cleans up.
 func (s *BufferedSender) Close() error {
 	// since we are running, write lock during cleanup
 	s.runmx.Lock()
@@ -161,15 +161,33 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 	if err != nil {
 		return nil, err
 	}
+	return newBufferedSenderWithSender(simpleSender, flushInterval, flushBytes)
+}
 
-	sender := &BufferedSender{
+// newBufferedSender returns a new BufferedSender
+//
+// sender is an instance of a statsd.Sender interface. Sender is required.
+//
+// flushInterval is a time.Duration, and specifies the maximum interval for
+// packet sending. Note that if you send lots of metrics, you will send more
+// often. This is just a maximal threshold.
+//
+// flushBytes specifies the maximum udp packet size you wish to send. If adding
+// a metric would result in a larger packet than flushBytes, the packet will
+// first be send, then the new data will be added to the next packet.
+func newBufferedSenderWithSender(sender Sender, flushInterval time.Duration, flushBytes int) (Sender, error) {
+	if sender == nil {
+		return nil, fmt.Errorf("sender may not be nil")
+	}
+
+	bufSender := &BufferedSender{
 		flushBytes:    flushBytes,
 		flushInterval: flushInterval,
-		sender:        simpleSender,
+		sender:        sender,
 		buffer:        senderPool.Get(),
 		shutdown:      make(chan chan error),
 	}
 
-	sender.Start()
-	return sender, nil
+	bufSender.Start()
+	return bufSender, nil
 }

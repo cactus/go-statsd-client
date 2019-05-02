@@ -279,34 +279,6 @@ func (s *Client) NewSubStatter(prefix string) SubStatter {
 	return c
 }
 
-// NewClient returns a pointer to a new Client, and an error.
-//
-// addr is a string of the format "hostname:port", and must be parsable by
-// net.ResolveUDPAddr.
-//
-// prefix is the statsd client prefix. Can be "" if no prefix is desired.
-func NewClient(addr, prefix string) (Statter, error) {
-	sender, err := NewSimpleSender(addr)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{prefix: prefix, sender: sender}, nil
-}
-
-// NewClientWithSender returns a pointer to a new Client and an error.
-//
-// sender is an instance of a statsd.Sender interface and may not be nil
-//
-// prefix is the stastd client prefix. Can be "" if no prefix is desired.
-func NewClientWithSender(sender Sender, prefix string) (Statter, error) {
-	if sender == nil {
-		return nil, fmt.Errorf("Client sender may not be nil")
-	}
-
-	return &Client{prefix: prefix, sender: sender}, nil
-}
-
 // joinPathComp is a helper that ensures we combine path components with a dot
 // when it's appropriate to do so; prefix is the existing prefix and suffix is
 // the new component being added.
@@ -319,9 +291,3 @@ func joinPathComp(prefix, suffix string) string {
 	}
 	return prefix + suffix
 }
-
-// Dial is a compatibility alias for NewClient
-var Dial = NewClient
-
-// New is a compatibility alias for NewClient
-var New = NewClient

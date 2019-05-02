@@ -2,7 +2,11 @@ Changelog
 =========
 
 ## head
-
+*   A new client constructor with "config style" semantics.
+    "legacy" client construction still supported, to retain backwards compat.
+*   Add an optional re-resolving client configuration. This sets a schedule for
+    having the client periodically re-resolve the addr to ip. This does add some
+    overhead, so best used only when necessary.
 
 ## 3.1.1 2018-01-19
 *   avoid some overhead by not using defer for two "hot" path funcs

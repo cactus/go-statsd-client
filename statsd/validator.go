@@ -6,6 +6,7 @@ package statsd
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 )
 
@@ -23,4 +24,14 @@ func CheckName(stat string) error {
 		return fmt.Errorf("invalid stat name: %s", stat)
 	}
 	return nil
+}
+
+func mustBeIP(hostport string) bool {
+	host, _, err := net.SplitHostPort(hostport)
+	if err != nil {
+		return false
+	}
+
+	ip := net.ParseIP(host)
+	return ip != nil
 }

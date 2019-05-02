@@ -7,6 +7,9 @@ package statsd
 import "time"
 
 // A NoopClient is a client that does nothing.
+//
+// Deprecated: This type is "legacy", and it is recommented to migrate to
+// using a nil *Client in the future.
 type NoopClient struct{}
 
 // Close closes the connection and cleans up.
@@ -103,9 +106,15 @@ func (s *NoopClient) SetSamplerFunc(sampler SamplerFunc) {}
 // nil, just supplied to support api convention).
 // Use variadic arguments to support identical format as NewClient, or a more
 // conventional no argument form.
+//
+// Deprecated: This type is "legacy", and it is recommented to migrate to
+// using a nil *Client in the future.
 func NewNoopClient(a ...interface{}) (Statter, error) {
 	return &NoopClient{}, nil
 }
 
 // NewNoop is a compatibility alias for NewNoopClient
+//
+// Deprecated: This type is "legacy", and it is recommented to migrate to
+// using a nil *Client in the future.
 var NewNoop = NewNoopClient
