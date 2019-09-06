@@ -158,13 +158,40 @@ func newUDPListener(addr string) (*net.UDPConn, error) {
 }
 
 func ExampleClient() {
+	// First create a client config. Here is a simple config that sends one
+	// stat per packet (for compatibility).
+	config := &ClientConfig{
+		Address: "127.0.0.1:8125",
+		Prefix:  "test-client",
+	}
+
+	// Now create the client
+	client, err := NewClientWithConfig(config)
+
+	// and handle any initialization errors
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// make sure to clean up
+	defer client.Close()
+
+	// Send a stat
+	err = client.Inc("stat1", 42, 1.0)
+	// handle any errors
+	if err != nil {
+		log.Printf("Error sending metric: %+v", err)
+	}
+}
+
+func ExampleClient_legacySimple() {
 	// first create a client
 	client, err := NewClient("127.0.0.1:8125", "test-client")
 	// handle any errors
 	if err != nil {
 		log.Fatal(err)
 	}
-	// make sure to clean up
+	// make sure to close to clean up when done, to avoid leaks.
 	defer client.Close()
 
 	// Send a stat
@@ -180,22 +207,26 @@ func ExampleClient_noop() {
 	var client Statter
 	var err error
 
-	// first try to create a real client
-	client, err = NewClient("not-resolvable:8125", "test-client")
+	// First create a client config. Here is a simple config that sends one
+	// stat per packet (for compatibility).
+	config := &ClientConfig{
+		Address: "not-resolvable:8125",
+		Prefix:  "test-client",
+	}
+
+	// Now create the client
+	client, err = NewClientWithConfig(config)
+
 	// Let us say real client creation fails, but you don't care enough about
 	// stats that you don't want your program to run. Just log an error and
 	// make a NoopClient instead
 	if err != nil {
 		log.Println("Remote endpoint did not resolve. Disabling stats", err)
-		client, _ = NewNoopClient()
 	}
-	// make sure to clean up
+	// at this point, client is a nil *Client. This will work like a noop client.
+	// It is ok to call close when client is nil. It will be a noop too.
 	defer client.Close()
 
-	// Send a stat
+	// Sicne client is nil, this is a noop.
 	err = client.Inc("stat1", 42, 1.0)
-	// handle any errors
-	if err != nil {
-		log.Printf("Error sending metric: %+v", err)
-	}
 }

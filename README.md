@@ -16,6 +16,79 @@ Viewable online at [godoc.org][2].
 
 ## Example
 
+Some examples:
+
+``` go
+import (
+    "log"
+
+    "github.com/cactus/go-statsd-client/statsd"
+)
+
+func main() {
+    // First create a client config. Here is a simple config that sends one
+    // stat per packet (for compatibility).
+    config := &statsd.ClientConfig{
+        Address: "127.0.0.1:8125",
+        Prefix: "test-client",
+    }
+
+    /*
+    // This one is for a client that re-resolves the hostname ever 30 seconds.
+    // Useful if the address of a hostname changes frequently. Note that this
+    // type of client has some additional locking overhead for safety.
+    // As such, leave ResInetval as the zero value (previous exmaple) if you
+    // don't specifically need this functionality.
+    config := &statsd.ClientConfig{
+        Address: "127.0.0.1:8125",
+        Prefix: "test-client",
+        ResInterval: 30 * time.Second,
+    }
+
+    // This one is for a buffered client, which sends multiple stats in one
+    // packet, is recommended when your server supports it (better performance).
+    config := &statsd.ClientConfig{
+        Address: "127.0.0.1:8125",
+        Prefix: "test-client",
+        UseBuffered: true,
+        // interval to force flush buffer. full buffers will flush on their own,
+        // but for data not frequently sent, a max threshold is useful
+        FlushInterval: 300*time.Millisecond,
+    }
+
+    // This one is for a buffered resolving client, which sends multiple stats
+    // in one packet (like previous example), as well as re-resolving the
+    // hostname every 30 seconds.
+    config := &statsd.ClientConfig{
+        Address: "127.0.0.1:8125",
+        Prefix: "test-client",
+        ResInterval: 30 * time.Second,
+        UseBuffered: true,
+        FlushInterval: 300*time.Millisecond,
+    }
+    */
+
+    // Now create the client
+    client, err := statsd.NewClientWithConfig(config)
+
+    // and handle any initialization errors
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // make sure to close to clean up when done, to avoid leaks.
+    defer client.Close()
+
+    // Send a stat
+    client.Inc("stat1", 42, 1.0)
+}
+```
+
+### Legacy Example
+
+A legacy client creation method is still supported. This is retained so as not to break
+or interrupt existing integrations.
+
 ``` go
 import (
     "log"
@@ -36,7 +109,7 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-    // make sure to clean up
+    // make sure to close to clean up when done, to avoid leaks.
     defer client.Close()
 
     // Send a stat
@@ -44,7 +117,8 @@ func main() {
 }
 ```
 
-See [docs][2] for more info. There is also some simple example code in the
+
+See [docs][2] for more info. There is also some additional example code in the
 `test-client` directory.
 
 ## Contributors

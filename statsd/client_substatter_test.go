@@ -272,13 +272,20 @@ func TestNoopSubStatterClient(t *testing.T) {
 }
 
 func ExampleClient_substatter() {
-	// first create a client
-	client, err := NewClient("127.0.0.1:8125", "test-client")
+	// First create a client config. Here is a simple config that sends one
+	// stat per packet (for compatibility).
+	config := &ClientConfig{
+		Address: "127.0.0.1:8125",
+		Prefix:  "test-client",
+	}
+
+	// Now create the client
+	client, err := NewClientWithConfig(config)
 	// handle any errors
 	if err != nil {
 		log.Fatal(err)
 	}
-	// make sure to clean up
+	// make sure to close to clean up when done, to avoid leaks.
 	defer client.Close()
 
 	// create a substatter

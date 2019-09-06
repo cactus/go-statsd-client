@@ -185,13 +185,44 @@ func TestFlushOnClose(t *testing.T) {
 }
 
 func ExampleClient_buffered() {
+	// This one is for a buffered client, which sends multiple stats in one
+	// packet, is recommended when your server supports it (better performance).
+	config := &ClientConfig{
+		Address:     "127.0.0.1:8125",
+		Prefix:      "test-client",
+		UseBuffered: true,
+		// interval to force flush buffer. full buffers will flush on their own,
+		// but for data not frequently sent, a max threshold is useful
+		FlushInterval: 300 * time.Millisecond,
+	}
+
+	// Now create the client
+	client, err := NewClientWithConfig(config)
+
+	// and handle any initialization errors
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// make sure to close to clean up when done, to avoid leaks.
+	defer client.Close()
+
+	// Send a stat
+	err = client.Inc("stat1", 42, 1.0)
+	// handle any errors
+	if err != nil {
+		log.Printf("Error sending metric: %+v", err)
+	}
+}
+
+func ExampleClient_legacyBuffered() {
 	// first create a client
 	client, err := NewBufferedClient("127.0.0.1:8125", "test-client", 10*time.Millisecond, 0)
 	// handle any errors
 	if err != nil {
 		log.Fatal(err)
 	}
-	// make sure to clean up
+	// make sure to close to clean up when done, to avoid leaks.
 	defer client.Close()
 
 	// Send a stat

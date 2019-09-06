@@ -57,13 +57,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	config := &statsd.ClientConfig{
+		Address:     opts.HostPort,
+		Prefix:      opts.Prefix,
+		ResInterval: time.Duration(0),
+	}
+
 	var client statsd.Statter
 	if !opts.Nil {
-		if !opts.Buffered {
-			client, err = statsd.NewClient(opts.HostPort, opts.Prefix)
-		} else {
-			client, err = statsd.NewBufferedClient(opts.HostPort, opts.Prefix, opts.Duration/time.Duration(4), 0)
+		if opts.Buffered {
+			config.UseBuffered = true
+			config.FlushInterval = opts.Duration / time.Duration(4)
+			config.FlushBytes = 0
 		}
+
+		client, err = statsd.NewClientWithConfig(config)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -106,7 +114,6 @@ func main() {
 			}
 		case <-ender:
 			log.Printf("%d events called\n", count)
-			os.Exit(0)
 			return
 		}
 	}
