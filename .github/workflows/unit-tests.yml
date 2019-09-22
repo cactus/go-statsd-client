@@ -1,0 +1,33 @@
+name: unit-tests
+on:
+  push:
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  build:
+    name: Build
+    strategy:
+      matrix:
+        #goVer: ["1.11.x", "1.12.x", "1.13.x"]
+        goVer: ["1.13.x"]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Setup Go ${{ matrix.goVer }}
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.goVer }}
+      id: go
+
+    - name: Src Checkout
+      uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Tests
+      env:
+        GO111MODULE: "on"
+        GOPROXY: "https://proxy.golang.org"
+      run: cd statsd && go test -v -cpu=1,2 ./...
