@@ -1,6 +1,0 @@
-language: go
-sudo: false
-script: go test -v -cpu=1,2 ./...
-go:
-  - "1.11.x"
-  - "1.12.x"
