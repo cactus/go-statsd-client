@@ -2,6 +2,8 @@ Changelog
 =========
 
 ## head
+
+## 3.2.0 2019-09-21
 *   A new client constructor with "config style" semantics.
     "legacy" client construction still supported, to retain backwards compat.
 *   Add an optional re-resolving client configuration. This sets a schedule for
