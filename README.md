@@ -8,7 +8,7 @@ go-statsd-client
 
 ## About
 
-A [StatsD][1] client for Go.
+A [StatsD][1] client (UDP) for Go.
 
 ## Docs
 
