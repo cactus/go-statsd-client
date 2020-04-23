@@ -89,7 +89,7 @@ func newBufferedC(baseSender Sender, config *ClientConfig) (Statter, error) {
 		flushInterval = 300 * time.Millisecond
 	}
 
-	bufsender, err := newBufferedSenderWithSender(baseSender, flushInterval, flushBytes)
+	bufsender, err := NewBufferedSenderWithSender(baseSender, flushInterval, flushBytes)
 	if err != nil {
 		return nil, err
 	}

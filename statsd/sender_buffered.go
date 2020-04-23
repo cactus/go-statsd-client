@@ -161,10 +161,11 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 	if err != nil {
 		return nil, err
 	}
-	return newBufferedSenderWithSender(simpleSender, flushInterval, flushBytes)
+	return NewBufferedSenderWithSender(simpleSender, flushInterval, flushBytes)
 }
 
-// newBufferedSender returns a new BufferedSender
+// NewBufferedSenderWithSender returns a new BufferedSender, wrapping the
+// provided sender.
 //
 // sender is an instance of a statsd.Sender interface. Sender is required.
 //
@@ -175,7 +176,7 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 // flushBytes specifies the maximum udp packet size you wish to send. If adding
 // a metric would result in a larger packet than flushBytes, the packet will
 // first be send, then the new data will be added to the next packet.
-func newBufferedSenderWithSender(sender Sender, flushInterval time.Duration, flushBytes int) (Sender, error) {
+func NewBufferedSenderWithSender(sender Sender, flushInterval time.Duration, flushBytes int) (Sender, error) {
 	if sender == nil {
 		return nil, fmt.Errorf("sender may not be nil")
 	}
