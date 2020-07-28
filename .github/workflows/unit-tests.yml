@@ -1,9 +1,10 @@
 name: unit-tests
+
 on:
   push:
+    branches: [master]
   pull_request:
-    branches:
-    - master
+    branches: [master]
 
 jobs:
   build:
@@ -13,6 +14,7 @@ jobs:
         goVer: ["1.12.x", "1.13.x", "1.14.x"]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
+
     steps:
     - name: Setup Go ${{ matrix.goVer }}
       uses: actions/setup-go@v1
