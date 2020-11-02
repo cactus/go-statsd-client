@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cactus/go-statsd-client/statsd"
+	"github.com/cactus/go-statsd-client/v3/statsd"
 	flags "github.com/jessevdk/go-flags"
 )
 
