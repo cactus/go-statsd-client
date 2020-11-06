@@ -3,6 +3,11 @@ Changelog
 
 ## head
 
+## 4.0.0 2020-11-05
+*   Fix go.mod versioning. (GH-51,GH-52)
+*   Bump major version for go.mod change, just in an attempt to be safer
+    for existing users.
+
 ## 3.2.1 2020-06-23
 *   Export NewBufferedSenderWithSender for direct use where needed.
 
