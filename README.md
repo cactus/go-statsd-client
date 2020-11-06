@@ -22,7 +22,7 @@ Some examples:
 import (
     "log"
 
-    "github.com/cactus/go-statsd-client/v3/statsd"
+    "github.com/cactus/go-statsd-client/v4/statsd"
 )
 
 func main() {
@@ -93,7 +93,7 @@ or interrupt existing integrations.
 import (
     "log"
 
-    "github.com/cactus/go-statsd-client/v3/statsd"
+    "github.com/cactus/go-statsd-client/v4/statsd"
 )
 
 func main() {
@@ -136,7 +136,7 @@ Released under the [MIT license][3]. See `LICENSE.md` file for details.
 
 
 [1]: https://github.com/etsy/statsd
-[2]: http://godoc.org/github.com/cactus/go-statsd-client/v3/statsd
+[2]: http://godoc.org/github.com/cactus/go-statsd-client/v4/statsd
 [3]: http://www.opensource.org/licenses/mit-license.php
 [4]: https://github.com/cactus/go-statsd-client/graphs/contributors
 [5]: https://github.com/etsy/statsd/wiki#client-implementations
