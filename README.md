@@ -136,7 +136,7 @@ Released under the [MIT license][3]. See `LICENSE.md` file for details.
 
 
 [1]: https://github.com/etsy/statsd
-[2]: http://godoc.org/github.com/cactus/go-statsd-client/v4/statsd
+[2]: http://godoc.org/github.com/cactus/go-statsd-client/
 [3]: http://www.opensource.org/licenses/mit-license.php
 [4]: https://github.com/cactus/go-statsd-client/graphs/contributors
 [5]: https://github.com/etsy/statsd/wiki#client-implementations
