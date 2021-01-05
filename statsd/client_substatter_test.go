@@ -237,40 +237,6 @@ func TestNilSubStatterClient(t *testing.T) {
 	}
 }
 
-func TestNoopSubStatterClient(t *testing.T) {
-	l, err := newUDPListener("127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer l.Close()
-	for _, tt := range statsdSubStatterPacketTests {
-		c, err := NewNoopClient(l.LocalAddr().String(), tt.Prefix)
-		if err != nil {
-			t.Fatal(err)
-		}
-		s := c.NewSubStatter(tt.SubPrefix)
-		method := reflect.ValueOf(s).MethodByName(tt.Method)
-		e := method.Call([]reflect.Value{
-			reflect.ValueOf(tt.Stat),
-			reflect.ValueOf(tt.Value),
-			reflect.ValueOf(tt.Rate)})[0]
-		errInter := e.Interface()
-		if errInter != nil {
-			t.Fatal(errInter.(error))
-		}
-
-		data := make([]byte, 128)
-		n, _, err := l.ReadFrom(data)
-		// this is expected to error, since there should
-		// be no udp data sent, so the read will time out
-		if err == nil || n != 0 {
-			c.Close()
-			t.Fatal(err)
-		}
-		c.Close()
-	}
-}
-
 func ExampleClient_substatter() {
 	// First create a client config. Here is a simple config that sends one
 	// stat per packet (for compatibility).

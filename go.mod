@@ -1,4 +1,4 @@
-module github.com/cactus/go-statsd-client/v4
+module github.com/cactus/go-statsd-client/v5
 
 go 1.11
 

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cactus/go-statsd-client/v4/statsd"
+	"github.com/cactus/go-statsd-client/v5/statsd"
 )
 
 func TestRecordingSenderIsSender(t *testing.T) {
@@ -21,7 +21,7 @@ func TestRecordingSenderIsSender(t *testing.T) {
 func TestRecordingSender(t *testing.T) {
 	start := time.Now()
 	rs := new(RecordingSender)
-	statter, err := statsd.NewClientWithSender(rs, "test")
+	statter, err := statsd.NewClientWithSender(rs, "test", 0)
 	if err != nil {
 		t.Errorf("failed to construct client")
 		return

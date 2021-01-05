@@ -16,15 +16,15 @@ var bufPool = newBufferPool()
 
 // The StatSender interface wraps all the statsd metric methods
 type StatSender interface {
-	Inc(string, int64, float32) error
-	Dec(string, int64, float32) error
-	Gauge(string, int64, float32) error
-	GaugeDelta(string, int64, float32) error
-	Timing(string, int64, float32) error
-	TimingDuration(string, time.Duration, float32) error
-	Set(string, string, float32) error
-	SetInt(string, int64, float32) error
-	Raw(string, string, float32) error
+	Inc(string, int64, float32, ...Tag) error
+	Dec(string, int64, float32, ...Tag) error
+	Gauge(string, int64, float32, ...Tag) error
+	GaugeDelta(string, int64, float32, ...Tag) error
+	Timing(string, int64, float32, ...Tag) error
+	TimingDuration(string, time.Duration, float32, ...Tag) error
+	Set(string, string, float32, ...Tag) error
+	SetInt(string, int64, float32, ...Tag) error
+	Raw(string, string, float32, ...Tag) error
 }
 
 // The Statter interface defines the behavior of a stat client
@@ -62,6 +62,8 @@ type Client struct {
 	sender Sender
 	// sampler method
 	sampler SamplerFunc
+	// tag handler
+	tagFormat TagFormat
 }
 
 // Close closes the connection and cleans up.
@@ -78,114 +80,117 @@ func (s *Client) Close() error {
 // stat is a string name for the metric.
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0)
-func (s *Client) Inc(stat string, value int64, rate float32) error {
+// tags is a []Tag
+func (s *Client) Inc(stat string, value int64, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
-	return s.submit(stat, "", value, "|c", rate)
+	return s.submit(stat, "", value, "|c", rate, tags)
 }
 
 // Dec decrements a statsd count type.
 // stat is a string name for the metric.
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) Dec(stat string, value int64, rate float32) error {
+func (s *Client) Dec(stat string, value int64, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
-	return s.submit(stat, "", -value, "|c", rate)
+	return s.submit(stat, "", -value, "|c", rate, tags)
 }
 
 // Gauge submits/updates a statsd gauge type.
 // stat is a string name for the metric.
 // value is the integer value.
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) Gauge(stat string, value int64, rate float32) error {
+func (s *Client) Gauge(stat string, value int64, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
-	return s.submit(stat, "", value, "|g", rate)
+	return s.submit(stat, "", value, "|g", rate, tags)
 }
 
 // GaugeDelta submits a delta to a statsd gauge.
 // stat is the string name for the metric.
 // value is the (positive or negative) change.
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) GaugeDelta(stat string, value int64, rate float32) error {
+func (s *Client) GaugeDelta(stat string, value int64, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
 	// if negative, the submit formatter will prefix with a - already
-	// so only special case the positive value
+	// so only special case the positive value.
+	// don't pull out the prefix here, avoids some tiny amount of stack space by
+	// inlining like this. performance
 	if value >= 0 {
-		return s.submit(stat, "+", value, "|g", rate)
+		return s.submit(stat, "+", value, "|g", rate, tags)
 	}
-	return s.submit(stat, "", value, "|g", rate)
+	return s.submit(stat, "", value, "|g", rate, tags)
 }
 
 // Timing submits a statsd timing type.
 // stat is a string name for the metric.
 // delta is the time duration value in milliseconds
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) Timing(stat string, delta int64, rate float32) error {
+func (s *Client) Timing(stat string, delta int64, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
-	return s.submit(stat, "", delta, "|ms", rate)
+	return s.submit(stat, "", delta, "|ms", rate, tags)
 }
 
 // TimingDuration submits a statsd timing type.
 // stat is a string name for the metric.
 // delta is the timing value as time.Duration
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32) error {
+func (s *Client) TimingDuration(stat string, delta time.Duration, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
 	ms := float64(delta) / float64(time.Millisecond)
-	return s.submit(stat, "", ms, "|ms", rate)
+	return s.submit(stat, "", ms, "|ms", rate, tags)
 }
 
 // Set submits a stats set type
 // stat is a string name for the metric.
 // value is the string value
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) Set(stat string, value string, rate float32) error {
+func (s *Client) Set(stat string, value string, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
-	return s.submit(stat, "", value, "|s", rate)
+	return s.submit(stat, "", value, "|s", rate, tags)
 }
 
 // SetInt submits a number as a stats set type.
 // stat is a string name for the metric.
 // value is the integer value
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) SetInt(stat string, value int64, rate float32) error {
+func (s *Client) SetInt(stat string, value int64, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
-	return s.submit(stat, "", value, "|s", rate)
+	return s.submit(stat, "", value, "|s", rate, tags)
 }
 
 // Raw submits a preformatted value.
 // stat is the string name for the metric.
 // value is a preformatted "raw" value string.
 // rate is the sample rate (0.0 to 1.0).
-func (s *Client) Raw(stat string, value string, rate float32) error {
+func (s *Client) Raw(stat string, value string, rate float32, tags ...Tag) error {
 	if !s.includeStat(rate) {
 		return nil
 	}
 
-	return s.submit(stat, "", value, "", rate)
+	return s.submit(stat, "", value, "", rate, tags)
 }
 
 // SetSamplerFunc sets a sampler function to something other than the default
@@ -197,48 +202,65 @@ func (s *Client) SetSamplerFunc(sampler SamplerFunc) {
 }
 
 // submit an already sampled raw stat
-func (s *Client) submit(stat, vprefix string, value interface{}, suffix string, rate float32) error {
-	data := bufPool.Get()
-	defer bufPool.Put(data)
-
-	if s.prefix != "" {
-		data.WriteString(s.prefix)
-		data.WriteString(".")
+func (s *Client) submit(stat, vprefix string, value interface{}, suffix string, rate float32, tags []Tag) error {
+	skiptags := false
+	if len(tags) == 0 {
+		skiptags = true
 	}
 
-	data.WriteString(stat)
-	data.WriteString(":")
-
-	if vprefix != "" {
-		data.WriteString(vprefix)
-	}
-
+	buf := bufPool.Get()
+	defer bufPool.Put(buf)
 	// sadly, no way to jam this back into the bytes.Buffer without
 	// doing a few allocations... avoiding those is the whole point here...
 	// so from here on out just use it as a raw []byte
-	b := data.Bytes()
+	data := buf.Bytes()
+
+	if s.prefix != "" {
+		data = append(data, s.prefix...)
+		data = append(data, '.')
+	}
+
+	data = append(data, stat...)
+
+	// infix tags, if present
+	if !skiptags && s.tagFormat&AllInfix != 0 {
+		data = s.tagFormat.WriteInfix(data, tags)
+		// if we did infix already, no suffix also.
+		skiptags = true
+	}
+
+	data = append(data, ':')
+
+	if vprefix != "" {
+		data = append(data, vprefix...)
+	}
 
 	switch v := value.(type) {
 	case string:
-		b = append(b, v...)
+		data = append(data, v...)
 	case int64:
-		b = strconv.AppendInt(b, v, 10)
+		data = strconv.AppendInt(data, v, 10)
 	case float64:
-		b = strconv.AppendFloat(b, v, 'f', -1, 64)
+		data = strconv.AppendFloat(data, v, 'f', -1, 64)
 	default:
 		return fmt.Errorf("No matching type format")
 	}
 
 	if suffix != "" {
-		b = append(b, suffix...)
+		data = append(data, suffix...)
 	}
 
 	if rate < 1 {
-		b = append(b, "|@"...)
-		b = strconv.AppendFloat(b, float64(rate), 'f', 6, 32)
+		data = append(data, "|@"...)
+		data = strconv.AppendFloat(data, float64(rate), 'f', 6, 32)
 	}
 
-	_, err := s.sender.Send(b)
+	// suffix tags if present
+	if !skiptags && s.tagFormat&AllSuffix != 0 {
+		data = s.tagFormat.WriteSuffix(data, tags)
+	}
+
+	_, err := s.sender.Send(data)
 	return err
 }
 

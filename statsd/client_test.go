@@ -57,10 +57,108 @@ func TestClient(t *testing.T) {
 			t.Fatal(err)
 		}
 		method := reflect.ValueOf(c).MethodByName(tt.Method)
-		e := method.Call([]reflect.Value{
+		values := []reflect.Value{
 			reflect.ValueOf(tt.Stat),
 			reflect.ValueOf(tt.Value),
-			reflect.ValueOf(tt.Rate)})[0]
+			reflect.ValueOf(tt.Rate),
+		}
+		e := method.Call(values)[0]
+		errInter := e.Interface()
+		if errInter != nil {
+			t.Fatal(errInter.(error))
+		}
+
+		data := make([]byte, 128)
+		_, _, err = l.ReadFrom(data)
+		if err != nil {
+			c.Close()
+			t.Fatal(err)
+		}
+
+		data = bytes.TrimRight(data, "\x00")
+		if !bytes.Equal(data, []byte(tt.Expected)) {
+			c.Close()
+			t.Fatalf("%s got '%s' expected '%s'", tt.Method, data, tt.Expected)
+		}
+		c.Close()
+	}
+}
+
+func TestClientTags(t *testing.T) {
+	statsdTaggedPacketTests := []struct {
+		TagFormat TagFormat
+		Prefix    string
+		Method    string
+		Stat      string
+		Value     interface{}
+		Rate      float32
+		Tags      []Tag
+		Expected  string
+	}{
+		{
+			SuffixOctothorpe,
+			"test", "Inc", "count", int64(1), 0.999999,
+			[]Tag{{"tag1", "val1"}},
+			"test.count:1|c|@0.999999|#tag1:val1",
+		},
+		{
+			SuffixOctothorpe,
+			"test", "Inc", "count", int64(1), 1.0,
+			[]Tag{{"tag1", "val1"}, {"tag2", "val2"}},
+			"test.count:1|c|#tag1:val1,tag2:val2",
+		},
+		{
+			InfixComma,
+			"test", "Inc", "count", int64(1), 1.0,
+			[]Tag{{"tag1", "val1"}},
+			"test.count,tag1=val1:1|c",
+		},
+		{
+			InfixComma,
+			"test", "Inc", "count", int64(1), 1.0,
+			[]Tag{{"tag1", "val1"}, {"tag2", "val2"}},
+			"test.count,tag1=val1,tag2=val2:1|c",
+		},
+		{
+			InfixSemicolon,
+			"test", "Inc", "count", int64(1), 1.0,
+			[]Tag{{"tag1", "val1"}},
+			"test.count;tag1=val1:1|c",
+		},
+		{
+			InfixSemicolon,
+			"test", "Inc", "count", int64(1), 1.0,
+			[]Tag{{"tag1", "val1"}, {"tag2", "val2"}},
+			"test.count;tag1=val1;tag2=val2:1|c",
+		},
+	}
+
+	l, err := newUDPListener("127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer l.Close()
+	for _, tt := range statsdTaggedPacketTests {
+		config := &ClientConfig{
+			Address:   l.LocalAddr().String(),
+			Prefix:    tt.Prefix,
+			TagFormat: tt.TagFormat,
+		}
+
+		c, err := NewClientWithConfig(config)
+		if err != nil {
+			t.Fatal(err)
+		}
+		c.(*Client).tagFormat = tt.TagFormat
+		method := reflect.ValueOf(c).MethodByName(tt.Method)
+		values := []reflect.Value{
+			reflect.ValueOf(tt.Stat),
+			reflect.ValueOf(tt.Value),
+			reflect.ValueOf(tt.Rate)}
+		for _, tag := range tt.Tags {
+			values = append(values, reflect.ValueOf(tag))
+		}
+		e := method.Call(values)[0]
 		errInter := e.Interface()
 		if errInter != nil {
 			t.Fatal(errInter.(error))
@@ -91,39 +189,6 @@ func TestNilClient(t *testing.T) {
 	for _, tt := range statsdPacketTests {
 		var c *Client
 
-		method := reflect.ValueOf(c).MethodByName(tt.Method)
-		e := method.Call([]reflect.Value{
-			reflect.ValueOf(tt.Stat),
-			reflect.ValueOf(tt.Value),
-			reflect.ValueOf(tt.Rate)})[0]
-		errInter := e.Interface()
-		if errInter != nil {
-			t.Fatal(errInter.(error))
-		}
-
-		data := make([]byte, 128)
-		n, _, err := l.ReadFrom(data)
-		// this is expected to error, since there should
-		// be no udp data sent, so the read will time out
-		if err == nil || n != 0 {
-			c.Close()
-			t.Fatal(err)
-		}
-		c.Close()
-	}
-}
-
-func TestNoopClient(t *testing.T) {
-	l, err := newUDPListener("127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer l.Close()
-	for _, tt := range statsdPacketTests {
-		c, err := NewNoopClient(l.LocalAddr().String(), tt.Prefix)
-		if err != nil {
-			t.Fatal(err)
-		}
 		method := reflect.ValueOf(c).MethodByName(tt.Method)
 		e := method.Call([]reflect.Value{
 			reflect.ValueOf(tt.Stat),
@@ -202,8 +267,8 @@ func ExampleClient_legacySimple() {
 	}
 }
 
-func ExampleClient_noop() {
-	// use interface so we can sub noop client if needed
+func ExampleClient_nil() {
+	// use interface so we can sub nil client if needed
 	var client Statter
 	var err error
 
@@ -219,7 +284,7 @@ func ExampleClient_noop() {
 
 	// Let us say real client creation fails, but you don't care enough about
 	// stats that you don't want your program to run. Just log an error and
-	// make a NoopClient instead
+	// make a nil instead
 	if err != nil {
 		log.Println("Remote endpoint did not resolve. Disabling stats", err)
 	}

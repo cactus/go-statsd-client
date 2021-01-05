@@ -41,6 +41,10 @@ type ClientConfig struct {
 	// for local traffic. If sending over the public internet, 512 bytes is
 	// the recommended value.
 	FlushBytes int
+
+	// The desired tag format to use for tags (note: statsd tag support varies)
+	// Supported formats are one of: statsd.DataDog, statsd.Grahpite, statsd.Influx
+	TagFormat TagFormat
 }
 
 // NewClientWithConfig returns a new BufferedClient
@@ -71,7 +75,7 @@ func NewClientWithConfig(config *ClientConfig) (Statter, error) {
 	if config.UseBuffered {
 		return newBufferedC(sender, config)
 	} else {
-		return NewClientWithSender(sender, config.Prefix)
+		return NewClientWithSender(sender, config.Prefix, config.TagFormat)
 	}
 }
 
@@ -94,7 +98,7 @@ func newBufferedC(baseSender Sender, config *ClientConfig) (Statter, error) {
 		return nil, err
 	}
 
-	return NewClientWithSender(bufsender, config.Prefix)
+	return NewClientWithSender(bufsender, config.Prefix, config.TagFormat)
 }
 
 // NewClientWithSender returns a pointer to a new Client and an error.
@@ -102,10 +106,27 @@ func newBufferedC(baseSender Sender, config *ClientConfig) (Statter, error) {
 // sender is an instance of a statsd.Sender interface and may not be nil
 //
 // prefix is the stastd client prefix. Can be "" if no prefix is desired.
-func NewClientWithSender(sender Sender, prefix string) (Statter, error) {
+//
+// tagFormat is the desired tag format, if any. If you don't plan on using
+// tags, use 0 to use the default.
+func NewClientWithSender(sender Sender, prefix string, tagFormat TagFormat) (Statter, error) {
 	if sender == nil {
 		return nil, fmt.Errorf("Client sender may not be nil")
 	}
 
-	return &Client{prefix: prefix, sender: sender}, nil
+	// if zero value is supplied, pick something as a default
+	if tagFormat == 0 {
+		tagFormat = SuffixOctothorpe
+	}
+
+	if tagFormat&(AllInfix|AllSuffix) == 0 {
+		return nil, fmt.Errorf("Invalid tagFormat section")
+	}
+
+	client := &Client{
+		prefix:    prefix,
+		sender:    sender,
+		tagFormat: tagFormat,
+	}
+	return client, nil
 }

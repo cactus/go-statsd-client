@@ -22,7 +22,7 @@ Some examples:
 import (
     "log"
 
-    "github.com/cactus/go-statsd-client/v4/statsd"
+    "github.com/cactus/go-statsd-client/v5/statsd"
 )
 
 func main() {
@@ -66,6 +66,19 @@ func main() {
         UseBuffered: true,
         FlushInterval: 300*time.Millisecond,
     }
+
+    // This one is an example of configuring "Tag" support
+    // Supported formats are:
+    //   InfixComma
+    //   InfixSemicolon
+    //   SuffixOctothorpe
+    // The default, if not otherwise specified, is SuffixOctothorpe.
+    config := &statsd.ClientConfig{
+        Address: "127.0.0.1:8125",
+        Prefix: "test-client",
+        ResInterval: 30 * time.Second,
+        TagFormat: statsd.InfixSemicolon,
+    }
     */
 
     // Now create the client
@@ -81,6 +94,9 @@ func main() {
 
     // Send a stat
     client.Inc("stat1", 42, 1.0)
+
+    // Send a stat with "Tags"
+    client.Inc("stat2", 41, 1.0, Tag{"mytag", "tagval"})
 }
 ```
 
@@ -93,7 +109,7 @@ or interrupt existing integrations.
 import (
     "log"
 
-    "github.com/cactus/go-statsd-client/v4/statsd"
+    "github.com/cactus/go-statsd-client/v5/statsd"
 )
 
 func main() {
