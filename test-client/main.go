@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/cactus/go-statsd-client/v5/statsd"
+	"github.com/cactus/go-statsd-client/v4/statsd"
 	flags "github.com/jessevdk/go-flags"
 )
 
@@ -63,7 +63,7 @@ func main() {
 		ResInterval: time.Duration(0),
 	}
 
-	var client statsd.Statter
+	var client statsd.Statter = (*statsd.Client)(nil)
 	if !opts.Nil {
 		if opts.Buffered {
 			config.UseBuffered = true
