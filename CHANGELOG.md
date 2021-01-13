@@ -2,6 +2,8 @@ Changelog
 =========
 
 ## head
+
+## 5.0.0 2021-01-13
 *   Add Tag support: suffix-octothorpe, infix-comma, infix-semicolon (GH-53)
 *   Remove previously deprecated NoopClient. Use a nil `*Client` Statter as a
     replacement, if needed. Ex:
@@ -11,7 +13,6 @@ Changelog
     // It will become a small overhead (just a couple function calls) noop.
     err = client.Inc("stat1", 42, 1.0)
     ```
-
 
 ## 4.0.0 2020-11-05
 *   Fix go.mod versioning. (GH-51,GH-52)
