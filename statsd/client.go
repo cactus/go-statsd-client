@@ -296,6 +296,7 @@ func (s *Client) NewSubStatter(prefix string) SubStatter {
 			prefix:  joinPathComp(s.prefix, prefix),
 			sender:  s.sender,
 			sampler: s.sampler,
+			tagFormat: s.tagFormat,
 		}
 	}
 	return c
