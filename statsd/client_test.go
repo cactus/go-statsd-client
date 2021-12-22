@@ -30,8 +30,13 @@ var statsdPacketTests = []struct {
 	{"test", "TimingDuration", "timing", 3 * time.Microsecond, 1.0, "test.timing:0.003|ms"},
 	{"test", "Set", "strset", "pickle", 1.0, "test.strset:pickle|s"},
 	{"test", "SetInt", "intset", int64(1), 1.0, "test.intset:1|s"},
+	{"test", "SetInt", "intset", int64(-1), 1.0, "test.intset:-1|s"},
 	{"test", "GaugeDelta", "gauge", int64(1), 1.0, "test.gauge:+1|g"},
 	{"test", "GaugeDelta", "gauge", int64(-1), 1.0, "test.gauge:-1|g"},
+	{"test", "GaugeFloatDelta", "gauge", float64(1.1), 1.0, "test.gauge:+1.1|g"},
+	{"test", "GaugeFloatDelta", "gauge", float64(-1.1), 1.0, "test.gauge:-1.1|g"},
+	{"test", "SetFloat", "floatset", float64(1.1), 1.0, "test.floatset:1.1|s"},
+	{"test", "SetFloat", "floatset", float64(-1.1), 1.0, "test.floatset:-1.1|s"},
 
 	{"", "Gauge", "gauge", int64(1), 1.0, "gauge:1|g"},
 	{"", "Inc", "count", int64(1), 0.999999, "count:1|c|@0.999999"},
@@ -41,8 +46,13 @@ var statsdPacketTests = []struct {
 	{"", "TimingDuration", "timing", 1500 * time.Microsecond, 1.0, "timing:1.5|ms"},
 	{"", "Set", "strset", "pickle", 1.0, "strset:pickle|s"},
 	{"", "SetInt", "intset", int64(1), 1.0, "intset:1|s"},
+	{"", "SetInt", "intset", int64(-1), 1.0, "intset:-1|s"},
 	{"", "GaugeDelta", "gauge", int64(1), 1.0, "gauge:+1|g"},
 	{"", "GaugeDelta", "gauge", int64(-1), 1.0, "gauge:-1|g"},
+	{"", "GaugeFloatDelta", "gauge", float64(1.1), 1.0, "gauge:+1.1|g"},
+	{"", "GaugeFloatDelta", "gauge", float64(-1.1), 1.0, "gauge:-1.1|g"},
+	{"", "SetFloat", "floatset", float64(1.1), 1.0, "floatset:1.1|s"},
+	{"", "SetFloat", "floatset", float64(-1.1), 1.0, "floatset:-1.1|s"},
 }
 
 func TestClient(t *testing.T) {
