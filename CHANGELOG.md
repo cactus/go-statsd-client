@@ -3,6 +3,8 @@ Changelog
 
 ## head
 *   Fix for tag format in substatter. (GH-55)
+*   Add support for Floats in several situations. (GH-57)
+*   Add new ExtendedStatSender interface for the new Float methods.
 
 ## 5.0.0 2021-01-13
 *   Add Tag support: suffix-octothorpe, infix-comma, infix-semicolon (GH-53)
