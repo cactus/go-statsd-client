@@ -34,7 +34,7 @@ func (s *ResolvingSimpleSender) Send(data []byte) (int, error) {
 	// Note: use manual unlocking instead of defer unlocking,
 	// due to the overhead of defers in this hot code path.
 	// https://go-review.googlesource.com/c/go/+/190098
-	// removes a lot of the overhead (in go versions after 1.14),
+	// removes a lot of the overhead (in go versions >= 1.14),
 	// but it is still faster to not use it in some cases
 	// (like this one).
 
