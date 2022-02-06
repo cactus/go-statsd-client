@@ -19,8 +19,8 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - run: |
-      cd statsd && go build .
+    - name: build
+      run: cd statsd && go build .
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
