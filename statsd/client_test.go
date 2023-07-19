@@ -302,6 +302,6 @@ func ExampleClient_nil() {
 	// It is ok to call close when client is nil. It will be a noop too.
 	defer client.Close()
 
-	// Sicne client is nil, this is a noop.
-	err = client.Inc("stat1", 42, 1.0)
+	// Since client is nil, this is a noop.
+	client.Inc("stat1", 42, 1.0)
 }
