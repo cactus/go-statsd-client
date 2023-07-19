@@ -2,6 +2,8 @@ Changelog
 =========
 
 ## head
+
+## 5.1.0 2023-07-19
 *   Fix for tag format in substatter. (GH-55)
 *   Add support for Floats in several situations. (GH-57)
 *   Add new ExtendedStatSender interface for the new Float methods.
