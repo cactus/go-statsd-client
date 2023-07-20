@@ -2,6 +2,7 @@ Changelog
 =========
 
 ## head
+*   update dependency
 
 ## 5.1.0 2023-07-19
 *   Fix for tag format in substatter. (GH-55)
