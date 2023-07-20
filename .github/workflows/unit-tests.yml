@@ -17,6 +17,11 @@ jobs:
     runs-on: ${{ matrix.platform }}
 
     steps:
+    - name: Src Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+
     - name: Setup Go ${{ matrix.goVer }}
       uses: actions/setup-go@v4
       with:
@@ -24,13 +29,8 @@ jobs:
         check-latest: true
       id: go
 
-    - name: Src Checkout
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 1
-
     - name: Tests
       env:
         GO111MODULE: "on"
         GOPROXY: "https://proxy.golang.org"
-      run: cd statsd && go test -v -cpu=1,2 ./...
+      run: go test -v -cpu=1,2 ./...
