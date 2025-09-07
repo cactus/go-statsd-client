@@ -18,7 +18,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        goVer: ["1.19.x", "1.22.x"]
+        goVer: ["1.19.x", "1.25.x"]
         platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
 
