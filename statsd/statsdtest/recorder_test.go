@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cactus/go-statsd-client/v5/statsd"
+	"github.com/cactus/go-statsd-client/v6/statsd"
 )
 
 func TestRecordingSenderIsSender(t *testing.T) {

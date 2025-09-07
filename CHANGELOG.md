@@ -1,8 +1,12 @@
 Changelog
 =========
 
-## head
-*   update dependency
+## 6.0.0 2025-09-07
+*   move test-client to its own go.mod file, so as to trim dependencies
+    for upstream consumers. test-client is intended for local testing
+    and/or develment and not necesarily installable via go-install.
+*   bump go.mod go version to 1.13, the version which GO111MODULE defaults to
+    auto.
 
 ## 5.1.0 2023-07-19
 *   Fix for tag format in substatter. (GH-55)

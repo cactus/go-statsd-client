@@ -22,7 +22,7 @@ Some examples:
 import (
     "log"
 
-    "github.com/cactus/go-statsd-client/v5/statsd"
+    "github.com/cactus/go-statsd-client/v6/statsd"
 )
 
 func main() {
@@ -109,7 +109,7 @@ or interrupt existing integrations.
 import (
     "log"
 
-    "github.com/cactus/go-statsd-client/v5/statsd"
+    "github.com/cactus/go-statsd-client/v6/statsd"
 )
 
 func main() {

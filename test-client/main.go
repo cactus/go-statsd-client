@@ -10,37 +10,31 @@ import (
 	"os"
 	"time"
 
-	"github.com/cactus/go-statsd-client/v5/statsd"
-	flags "github.com/jessevdk/go-flags"
+	"github.com/alecthomas/kong"
+	"github.com/cactus/go-statsd-client/v6/statsd"
 )
 
 func main() {
-
 	// command line flags
 	var opts struct {
-		HostPort  string        `long:"host" default:"127.0.0.1:8125" description:"host:port of statsd server"`
-		Prefix    string        `long:"prefix" default:"test-client" description:"Statsd prefix"`
-		StatType  string        `long:"type" default:"count" description:"stat type to send. Can be one of: timing, count, gauge"`
-		StatValue int64         `long:"value" default:"1" description:"Value to send"`
-		Name      string        `short:"n" long:"name" default:"counter" description:"stat name"`
-		Rate      float32       `short:"r" long:"rate" default:"1.0" description:"sample rate"`
-		Volume    int           `short:"c" long:"count" default:"1000" description:"Number of stats to send. Volume."`
-		Nil       bool          `long:"nil" description:"Use nil client"`
-		Buffered  bool          `long:"buffered" description:"Use a buffered client"`
-		Duration  time.Duration `short:"d" long:"duration" default:"10s" description:"How long to spread the volume across. For each second of duration, volume/seconds events will be sent."`
+		HostPort  string        `name:"host" default:"127.0.0.1:8125" help:"host:port of statsd server"`
+		Prefix    string        `name:"prefix" default:"test-client" help:"Statsd prefix"`
+		StatType  string        `name:"type" enum:"timing,count,gauge" default:"count" help:"stat type to send. Can be one of: timing, count, gauge"`
+		StatValue int64         `name:"value" default:"1" help:"Value to send"`
+		Name      string        `name:"name" short:"n" default:"counter" help:"stat name"`
+		Rate      float32       `name:"rate" short:"r" default:"1.0" help:"sample rate"`
+		Volume    int           `name:"count" short:"c" default:"1000" help:"Number of stats to send. Volume."`
+		Nil       bool          `name:"nil" help:"Use nil client"`
+		Buffered  bool          `name:"buffered" help:"Use a buffered client"`
+		Duration  time.Duration `name:"duration" short:"d" default:"10s" help:"How long to spread the volume across. For each second of duration, volume/seconds events will be sent."`
 	}
 
 	// parse said flags
-	_, err := flags.Parse(&opts)
-	if err != nil {
-		if e, ok := err.(*flags.Error); ok {
-			if e.Type == flags.ErrHelp {
-				os.Exit(0)
-			}
-		}
-		fmt.Printf("Error: %+v\n", err)
-		os.Exit(1)
-	}
+	kong.Parse(&opts,
+		kong.Name("test-client"),
+		kong.UsageOnError(),
+	)
+	fmt.Printf("%+v\n", opts)
 
 	if opts.Nil && opts.Buffered {
 		fmt.Printf("Specifying both nil and buffered together is invalid\n")
@@ -64,6 +58,7 @@ func main() {
 	}
 
 	var client statsd.Statter = (*statsd.Client)(nil)
+	var err error
 	if !opts.Nil {
 		if opts.Buffered {
 			config.UseBuffered = true
@@ -95,6 +90,8 @@ func main() {
 	default:
 		log.Fatal("Unsupported state type")
 	}
+
+	log.Printf("sending to %s\n", opts.HostPort)
 
 	pertick := opts.Volume / int(opts.Duration.Seconds()) / 10
 	// add some extra time, because the first tick takes a while
