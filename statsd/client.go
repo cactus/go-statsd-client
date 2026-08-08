@@ -296,7 +296,7 @@ func (s *Client) submit(stat, vprefix string, value interface{}, suffix string, 
 	case float64:
 		data = strconv.AppendFloat(data, v, 'f', -1, 64)
 	default:
-		return fmt.Errorf("No matching type format")
+		return fmt.Errorf("no matching type format")
 	}
 
 	if suffix != "" {

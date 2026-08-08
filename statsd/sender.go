@@ -32,7 +32,7 @@ func (s *SimpleSender) Send(data []byte) (int, error) {
 		return 0, err
 	}
 	if n == 0 {
-		return n, errors.New("Wrote no bytes")
+		return n, errors.New("wrote no bytes")
 	}
 	return n, nil
 }

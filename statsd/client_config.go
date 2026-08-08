@@ -111,7 +111,7 @@ func newBufferedC(baseSender Sender, config *ClientConfig) (Statter, error) {
 // tags, use 0 to use the default.
 func NewClientWithSender(sender Sender, prefix string, tagFormat TagFormat) (Statter, error) {
 	if sender == nil {
-		return nil, fmt.Errorf("Client sender may not be nil")
+		return nil, fmt.Errorf("client sender may not be nil")
 	}
 
 	// if zero value is supplied, pick something as a default
@@ -120,7 +120,7 @@ func NewClientWithSender(sender Sender, prefix string, tagFormat TagFormat) (Sta
 	}
 
 	if tagFormat&(AllInfix|AllSuffix) == 0 {
-		return nil, fmt.Errorf("Invalid tagFormat section")
+		return nil, fmt.Errorf("invalid tagFormat section")
 	}
 
 	client := &Client{
