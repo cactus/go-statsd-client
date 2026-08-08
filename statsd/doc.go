@@ -9,30 +9,29 @@ reused.
 
 Example usage:
 
-    // First create a client config. Here is a simple config that sends one
-    // stat per packet (for compatibility).
-    config := &statsd.ClientConfig{
-        Address: "127.0.0.1:8125",
-        Prefix: "test-client",
-    }
+	// First create a client config. Here is a simple config that sends one
+	// stat per packet (for compatibility).
+	config := &statsd.ClientConfig{
+	    Address: "127.0.0.1:8125",
+	    Prefix: "test-client",
+	}
 
-    // Now create the client
-    client, err := statsd.NewClientWithConfig(config)
+	// Now create the client
+	client, err := statsd.NewClientWithConfig(config)
 
-    // and handle any initialization errors
-    if err != nil {
-        log.Fatal(err)
-    }
+	// and handle any initialization errors
+	if err != nil {
+	    log.Fatal(err)
+	}
 
-    // make sure to clean up
-    defer client.Close()
+	// make sure to clean up
+	defer client.Close()
 
-    // Send a stat
-    err = client.Inc("stat1", 42, 1.0)
-    // handle any errors
-    if err != nil {
-        log.Printf("Error sending metric: %+v", err)
-    }
-
+	// Send a stat
+	err = client.Inc("stat1", 42, 1.0)
+	// handle any errors
+	if err != nil {
+	    log.Printf("Error sending metric: %+v", err)
+	}
 */
 package statsd
