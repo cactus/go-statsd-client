@@ -49,9 +49,9 @@ func (rs *RecordingSender) ClearSent() {
 
 // Send parses the provided []byte into stat objects and then appends these to
 // the buffer of sent stats. Buffer operations are synchronized so it is safe
-// to call this from multiple goroutines (though contenion will impact
+// to call this from multiple goroutines (though contention will impact
 // performance so don't use this during a benchmark). Send treats '\n' as a
-// delimiter between multiple sats in the same []byte.
+// delimiter between multiple stats in the same []byte.
 //
 // Calling after the Sender has been closed will return an error (and not
 // mutate the buffer).

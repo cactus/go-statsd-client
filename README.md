@@ -37,7 +37,7 @@ func main() {
     // This one is for a client that re-resolves the hostname ever 30 seconds.
     // Useful if the address of a hostname changes frequently. Note that this
     // type of client has some additional locking overhead for safety.
-    // As such, leave ResInetval as the zero value (previous exmaple) if you
+    // As such, leave ResInterval as the zero value (previous example) if you
     // don't specifically need this functionality.
     config := &statsd.ClientConfig{
         Address: "127.0.0.1:8125",

@@ -29,7 +29,7 @@ import "time"
 // for local traffic. If sending over the public internet, 512 bytes is
 // the recommended value.
 //
-// Deprecated: This interface is "legacy", and it is recommented to migrate to
+// Deprecated: This interface is "legacy", and it is recommended to migrate to
 // using NewClientWithConfig in the future.
 func NewBufferedClient(addr, prefix string, flushInterval time.Duration, flushBytes int) (Statter, error) {
 	config := &ClientConfig{
@@ -49,7 +49,7 @@ func NewBufferedClient(addr, prefix string, flushInterval time.Duration, flushBy
 //
 // prefix is the statsd client prefix. Can be "" if no prefix is desired.
 //
-// Deprecated: This interface is "legacy", and it is recommented to migrate to
+// Deprecated: This interface is "legacy", and it is recommended to migrate to
 // using NewClientWithConfig in the future.
 func NewClient(addr, prefix string) (Statter, error) {
 	config := &ClientConfig{
@@ -62,12 +62,12 @@ func NewClient(addr, prefix string) (Statter, error) {
 
 // Dial is a compatibility alias for NewClient
 //
-// Deprecated: This interface is "legacy", and it is recommented to migrate to
+// Deprecated: This interface is "legacy", and it is recommended to migrate to
 // using NewClientWithConfig in the future.
 var Dial = NewClient
 
 // New is a compatibility alias for NewClient
 //
-// Deprecated: This interface is "legacy", and it is recommented to migrate to
+// Deprecated: This interface is "legacy", and it is recommended to migrate to
 // using NewClientWithConfig in the future.
 var New = NewClient
