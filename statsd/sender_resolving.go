@@ -96,7 +96,7 @@ func (s *ResolvingSimpleSender) Reconnect() {
 	// done with rlock for now
 	s.mx.RUnlock()
 
-	// s.addrUnresolved doesn't change, so no do this under read lock
+	// s.addrUnresolved doesn't change, so no need to do this under read lock
 	addrResolved, err := net.ResolveUDPAddr("udp", s.addrUnresolved)
 
 	if err != nil {
@@ -151,7 +151,7 @@ func (s *ResolvingSimpleSender) run() {
 }
 
 // NewResolvingSimpleSender returns a new ResolvingSimpleSender for
-// sending to the supplied addresss.
+// sending to the supplied address.
 //
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.

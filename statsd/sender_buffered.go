@@ -145,7 +145,7 @@ func (s *BufferedSender) run() {
 	}
 }
 
-// send to remove endpoint and truncate buffer
+// send to remote endpoint and truncate buffer
 func (s *BufferedSender) flush(b *bytes.Buffer) (int, error) {
 	bb := b.Bytes()
 	bbl := len(bb)
@@ -169,7 +169,7 @@ func (s *BufferedSender) flush(b *bytes.Buffer) (int, error) {
 //
 // flushBytes specifies the maximum udp packet size you wish to send. If adding
 // a metric would result in a larger packet than flushBytes, the packet will
-// first be send, then the new data will be added to the next packet.
+// first be sent, then the new data will be added to the next packet.
 func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int) (Sender, error) {
 	simpleSender, err := NewSimpleSender(addr)
 	if err != nil {
@@ -189,7 +189,7 @@ func NewBufferedSender(addr string, flushInterval time.Duration, flushBytes int)
 //
 // flushBytes specifies the maximum udp packet size you wish to send. If adding
 // a metric would result in a larger packet than flushBytes, the packet will
-// first be send, then the new data will be added to the next packet.
+// first be sent, then the new data will be added to the next packet.
 func NewBufferedSenderWithSender(sender Sender, flushInterval time.Duration, flushBytes int) (Sender, error) {
 	if sender == nil {
 		return nil, fmt.Errorf("sender may not be nil")

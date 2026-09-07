@@ -42,14 +42,14 @@ func ParseStats(src []byte) Stats {
 		result[i] = Stat{Raw: e}
 		ss := &result[i]
 
-		// : deliniates the stat name from the stat data
+		// : delineates the stat name from the stat data
 		marker := bytes.IndexByte(e, ':')
 		if marker == -1 {
 			continue
 		}
 		ss.Stat = string(e[0:marker])
 
-		// stat data folows ':' with the form {value}|{type tag}[|@{sample rate}]
+		// stat data follows ':' with the form {value}|{type tag}[|@{sample rate}]
 		e = e[marker+1:]
 		marker = bytes.IndexByte(e, '|')
 		if marker == -1 {

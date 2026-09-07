@@ -43,7 +43,7 @@ type ClientConfig struct {
 	FlushBytes int
 
 	// The desired tag format to use for tags (note: statsd tag support varies)
-	// Supported formats are one of: statsd.DataDog, statsd.Grahpite, statsd.Influx
+	// Supported formats are one of: statsd.DataDog, statsd.Graphite, statsd.Influx
 	TagFormat TagFormat
 }
 
@@ -105,7 +105,7 @@ func newBufferedC(baseSender Sender, config *ClientConfig) (Statter, error) {
 //
 // sender is an instance of a statsd.Sender interface and may not be nil
 //
-// prefix is the stastd client prefix. Can be "" if no prefix is desired.
+// prefix is the statsd client prefix. Can be "" if no prefix is desired.
 //
 // tagFormat is the desired tag format, if any. If you don't plan on using
 // tags, use 0 to use the default.

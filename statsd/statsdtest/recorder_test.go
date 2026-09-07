@@ -41,7 +41,7 @@ func TestRecordingSender(t *testing.T) {
 	}
 
 	ms := float64(d) / float64(time.Millisecond)
-	// somewhat fragile in that it assums float rendering within client *shrug*
+	// somewhat fragile in that it assumes float rendering within client *shrug*
 	msStr := string(strconv.AppendFloat([]byte(""), ms, 'f', -1, 64))
 
 	expected := Stats{

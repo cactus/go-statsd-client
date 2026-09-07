@@ -44,7 +44,7 @@ func (s *SimpleSender) Close() error {
 }
 
 // NewSimpleSender returns a new SimpleSender for sending to the supplied
-// addresss.
+// address.
 //
 // addr is a string of the format "hostname:port", and must be parsable by
 // net.ResolveUDPAddr.
