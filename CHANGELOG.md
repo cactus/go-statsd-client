@@ -1,6 +1,9 @@
 Changelog
 =========
 
+## HEAD
+*   reorder some structs for improved efficiency of memory layout
+
 ## 6.0.0 2025-09-07
 *   move test-client to its own go.mod file, so as to trim dependencies
     for upstream consumers. test-client is intended for local testing
