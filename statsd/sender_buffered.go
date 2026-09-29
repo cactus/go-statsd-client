@@ -17,16 +17,16 @@ var senderPool = newBufferPool()
 // metrics, where possible.
 type BufferedSender struct {
 	sender        Sender
+	buffer        *bytes.Buffer
+	bufs          chan *bytes.Buffer
+	shutdown      chan chan error
 	flushBytes    int
 	flushInterval time.Duration
-	// buffers
-	bufmx  sync.Mutex
-	buffer *bytes.Buffer
-	bufs   chan *bytes.Buffer
 	// lifecycle
-	runmx    sync.RWMutex
-	shutdown chan chan error
-	running  bool
+	runmx sync.RWMutex
+	// buffers
+	bufmx   sync.Mutex
+	running bool
 }
 
 // Send bytes.
@@ -121,7 +121,7 @@ func (s *BufferedSender) run() {
 	doneChan := make(chan bool)
 	go func() {
 		for buf := range s.bufs {
-			s.flush(buf)
+			s.flush(buf) // #nosec G104
 			senderPool.Put(buf)
 		}
 		doneChan <- true

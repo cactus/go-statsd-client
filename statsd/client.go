@@ -58,19 +58,19 @@ type SamplerFunc func(float32) bool
 // DefaultSampler is the default rate sampler function
 func DefaultSampler(rate float32) bool {
 	if rate < 1 {
-		return rand.Float32() < rate
+		return rand.Float32() < rate // #nosec G404
 	}
 	return true
 }
 
 // A Client is a statsd client.
 type Client struct {
-	// prefix for statsd name
-	prefix string
 	// packet sender
 	sender Sender
 	// sampler method
 	sampler SamplerFunc
+	// prefix for statsd name
+	prefix string
 	// tag handler
 	tagFormat TagFormat
 }

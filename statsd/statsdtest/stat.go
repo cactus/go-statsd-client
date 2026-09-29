@@ -11,11 +11,11 @@ import (
 // consumed for this specific stat and Parsed will be set if no errors were hit
 // pulling information out of it.
 type Stat struct {
-	Raw    []byte
 	Stat   string
 	Value  string
 	Tag    string
 	Rate   string
+	Raw    []byte
 	Parsed bool
 }
 

@@ -45,10 +45,10 @@ func TestRecordingSender(t *testing.T) {
 	msStr := string(strconv.AppendFloat([]byte(""), ms, 'f', -1, 64))
 
 	expected := Stats{
-		{[]byte("test.stat:4444|c"), "test.stat", "4444", "c", "", true},
-		{[]byte("test.stat:-5555|c"), "test.stat", "-5555", "c", "", true},
-		{[]byte("test.set-stat:some string|s"), "test.set-stat", "some string", "s", "", true},
-		{[]byte(fmt.Sprintf("test.timing:%s|ms", msStr)), "test.timing", msStr, "ms", "", true},
+		{"test.stat", "4444", "c", "", []byte("test.stat:4444|c"), true},
+		{"test.stat", "-5555", "c", "", []byte("test.stat:-5555|c"), true},
+		{"test.set-stat", "some string", "s", "", []byte("test.set-stat:some string|s"), true},
+		{"test.timing", msStr, "ms", "", []byte(fmt.Sprintf("test.timing:%s|ms", msStr)), true},
 	}
 
 	if !reflect.DeepEqual(sent, expected) {

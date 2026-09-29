@@ -56,7 +56,7 @@ func NewSimpleSender(addr string) (Sender, error) {
 
 	ra, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
-		c.Close()
+		c.Close() // #nosec G104
 		return nil, err
 	}
 

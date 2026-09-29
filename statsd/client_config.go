@@ -26,11 +26,6 @@ type ClientConfig struct {
 	// ResInterval will be ignored.
 	ResInterval time.Duration
 
-	// UseBuffered determines whether a buffered sender is used or not.
-	// If a buffered sender is /not/ used, FlushInterval and FlushBytes values are
-	// ignored. Default is false.
-	UseBuffered bool
-
 	// FlushInterval is a time.Duration, and specifies the maximum interval for
 	// packet sending. Note that if you send lots of metrics, you will send more
 	// often. This is just a maximal threshold.
@@ -41,6 +36,11 @@ type ClientConfig struct {
 	// for local traffic. If sending over the public internet, 512 bytes is
 	// the recommended value.
 	FlushBytes int
+
+	// UseBuffered determines whether a buffered sender is used or not.
+	// If a buffered sender is /not/ used, FlushInterval and FlushBytes values are
+	// ignored. Default is false.
+	UseBuffered bool
 
 	// The desired tag format to use for tags (note: statsd tag support varies)
 	// Supported formats are one of: statsd.DataDog, statsd.Graphite, statsd.Influx

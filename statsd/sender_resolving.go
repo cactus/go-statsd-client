@@ -19,14 +19,14 @@ type ResolvingSimpleSender struct {
 	conn net.PacketConn
 	// resolved udp address
 	addrResolved *net.UDPAddr
+	doneChan     chan struct{}
 	// unresolved addr
 	addrUnresolved string
 	// interval time
 	reresolveInterval time.Duration
 	// lifecycle
-	mx       sync.RWMutex
-	doneChan chan struct{}
-	running  bool
+	mx      sync.RWMutex
+	running bool
 }
 
 // Send sends the data to the server endpoint.
@@ -98,7 +98,6 @@ func (s *ResolvingSimpleSender) Reconnect() {
 
 	// s.addrUnresolved doesn't change, so no need to do this under read lock
 	addrResolved, err := net.ResolveUDPAddr("udp", s.addrUnresolved)
-
 	if err != nil {
 		// no good new address.. so continue with old address
 		return
@@ -163,7 +162,7 @@ func NewResolvingSimpleSender(addr string, interval time.Duration) (Sender, erro
 
 	addrResolved, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
-		conn.Close()
+		conn.Close() // #nosec G104
 		return nil, err
 	}
 

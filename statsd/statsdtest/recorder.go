@@ -9,8 +9,8 @@ import (
 // buffer that can be later inspected instead of sending to some server. It
 // should constructed with NewRecordingSender().
 type RecordingSender struct {
-	m      sync.Mutex
 	buffer Stats
+	m      sync.Mutex
 	closed bool
 }
 
