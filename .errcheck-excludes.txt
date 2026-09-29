@@ -1,0 +1,5 @@
+(*os.File).Close
+(*net.conn).Close
+(net.PacketConn).Close
+(*github.com/cactus/go-statsd-client/v6/statsd.BufferedSender).Close
+(*github.com/cactus/go-statsd-client/v6/statsd.BufferedSender).flush
