@@ -61,12 +61,6 @@ fix:
     just _banner ">> running go fix"
     go fix -rangeint=false ./...
 
-# run modernize
-[group('hygiene')]
-modernize *ARGS:
-    just _banner ">> running modernize"
-    modernize -rangeint=false -test {{ ARGS }} ./...
-
 # update go.mod dependencies
 [group('hygiene')]
 update-go-deps:
